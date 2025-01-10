@@ -1,0 +1,6 @@
+.listItem:hover {
+    padding: 10px;
+    color: rgb(75, 75, 75);
+    border : 1px solid #ddd;
+    border-radius: 0.25em;
+}
