@@ -12,11 +12,16 @@ function Schedule() {
     const [loading, setLoading] = useState(true)
     const [newTodo, setNewTodo] = useState('')
     const navigate = useNavigate()
-    
+    const [formData, setFormData] = useState({
+        task: '',
+        description: '',
+        due_date: '',
+    })
+
     const events = todos.map(todo => ({
-        title: todo.description,
-        start: new Date(todo.date_start),
-        end: new Date(todo.date_end),
+        title: todo.task,
+        start: new Date(todo.date_created),
+        end: new Date(todo.due_date),
     }))
 
     useEffect(() => {
@@ -30,7 +35,6 @@ function Schedule() {
                     navigate('/login')
                     return
                 }
-
                 const response = await axios.get(`http://localhost:8000/my_schedule/`, {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
@@ -40,7 +44,6 @@ function Schedule() {
                 });
 
                 setTodos(response.data);
-                console.log(response.data)
             } catch (error) {
                 console.error('Error fetching todos:', error);
                 if (error.response && error.response.status === 401) {
@@ -77,37 +80,41 @@ function Schedule() {
         fetchTodos()
     }, [navigate])
 
-    const handleTodoChange = (e) => {
-        setNewTodo(e.target.value)
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        })
     }
 
-    const handleTodoSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
-        if (newTodo.trim()) {
-            try {
-                const accessToken = localStorage.getItem('accessToken')
-                const csrfToken = Cookies.get('csrftoken')
-
-                if (!accessToken) {
-                    console.error('No access token found')
-                    navigate('/login')
-                    return
-                }
-
-                await axios.post(`http://localhost:8000/my_schedule/`, {
-                    todo: newTodo,
-                }, {
+        setLoading(true)
+        try {
+            const accessToken = localStorage.getItem('accessToken')
+            const csrfToken = Cookies.get('csrftoken')
+            const response = await axios.post('http://localhost:8000/my_tasks/',
+                formData,
+                {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken
                     }
+                }
+            )
+            if (response.status === 201) {
+                setFormData({
+                    task: '',
+                    description: '',
+                    due_date: ''
                 })
-
-                setNewTodo('')
-            } catch (error) {
-                console.error('Error submitting todo:', error)
+                window.location.reload()
             }
+        } catch (error) {
+            console.error('Error creating task:', error)
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -123,32 +130,37 @@ function Schedule() {
         <div style={styles.container}>
             <div style={styles.header}>
                 <h1 style={styles.title}>Schedule</h1>
-                <form onSubmit={handleTodoSubmit} style={styles.form}>
+                <form onSubmit={handleSubmit} style={styles.form}>
                     <input
                         type="text"
-                        placeholder="Add new schedule item..."
-                        value={newTodo}
-                        onChange={handleTodoChange}
+                        name="task"
+                        placeholder="Task title..."
+                        value={formData.task}
+                        onChange={handleChange}
                         style={styles.input}
+                        required
                     />
-                    <input 
-                        type="datetime-local" 
-                        placeholder='Start' 
-                        name="start" 
-                        id="start"
-                        style={styles.dateInput}
+                    <input
+                        name="description"
+                        placeholder="Task description..."
+                        value={formData.description}
+                        onChange={handleChange}
+                        style={styles.input}
+                        required
                     />
-                    <input 
-                        type="datetime-local" 
-                        placeholder='End' 
-                        name="end" 
-                        id="end"
+                    <input
+                        type="date"
+                        name="due_date"
+                        value={formData.due_date}
+                        onChange={handleChange}
                         style={styles.dateInput}
+                        required
                     />
                     <button type="submit" style={styles.addButton}>
                         Add Schedule Item
                     </button>
                 </form>
+
             </div>
 
             <div style={styles.content}>
@@ -188,13 +200,13 @@ function Schedule() {
                                             <div style={styles.dateInfo}>
                                                 <span style={styles.dateLabel}>From:</span>
                                                 <span style={styles.dateValue}>
-                                                    {new Date(todo.date_start).toLocaleString()}
+                                                    {new Date(todo.date_created).toLocaleString()}
                                                 </span>
                                             </div>
                                             <div style={styles.dateInfo}>
                                                 <span style={styles.dateLabel}>To:</span>
                                                 <span style={styles.dateValue}>
-                                                    {new Date(todo.date_end).toLocaleString()}
+                                                    {new Date(todo.due_date).toLocaleString()}
                                                 </span>
                                             </div>
                                         </div>
@@ -211,7 +223,7 @@ function Schedule() {
                                     .filter(todo => todo.completed)
                                     .sort((a, b) => new Date(b.date_updated) - new Date(a.date_updated))
                                     .map((todo, index) => (
-                                        <div key={index} style={{...styles.todoCard, opacity: 0.8}}>
+                                        <div key={index} style={{ ...styles.todoCard, opacity: 0.8 }}>
                                             <h3 style={styles.todoTitle}>{todo.description}</h3>
                                             <div style={styles.completedBadge}>Completed</div>
                                             <div style={styles.todoFooter}>

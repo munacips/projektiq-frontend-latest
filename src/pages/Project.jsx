@@ -131,7 +131,7 @@ function Project() {
                     <section style={styles.section}>
                         <div style={styles.sectionHeader}>
                             <h2 style={styles.sectionTitle}>Issues</h2>
-                            <button style={styles.addButton}>+ New Issue</button>
+                            <button style={styles.addButton} onClick={()=>{navigate("/new_issue",{state:{project}})}} >+ New Issue</button>
                         </div>
                         <div style={styles.cardGrid}>
                             {project.issues?.map((issue, index) => (
@@ -177,7 +177,7 @@ function Project() {
                     <section style={styles.section}>
                         <div style={styles.sectionHeader}>
                             <h2 style={styles.sectionTitle}>Change Requests</h2>
-                            <button style={styles.addButton}>+ New Request</button>
+                            <button style={styles.addButton} onClick={()=>{navigate("/new_change_request",{state:{project}})}}>+ New Request</button>
                         </div>
                         <div style={styles.cardGrid}>
                             {project.change_requests?.map((request, index) => (

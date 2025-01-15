@@ -111,7 +111,7 @@ function Tasks() {
                         {tasks?.filter(task => !task.implemented)
                             .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
                             .map(task => (
-                                <div key={task.id} style={styles.taskCard}>
+                                <div key={task.id} style={styles.taskCard} onClick={()=>{navigate("/task",{state:{task}})}} >
                                     <div style={styles.taskHeader}>
                                         <h3 style={styles.taskTitle}>{task.task}</h3>
                                         <span style={styles.assignedBy}>
@@ -219,6 +219,7 @@ const styles = {
         padding: '20px',
         border: '1px solid #e2e8f0',
         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+        cursor: 'pointer',
     },
     taskHeader: {
         display: 'flex',

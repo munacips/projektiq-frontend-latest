@@ -13,6 +13,10 @@ import Schedule from "./pages/Schedule";
 import Chat from "./pages/Chat";
 import ChangeRequest from './pages/ChangeRequest';
 import NewProject from './pages/NewProject';
+import Task from './pages/Task';
+import NewIssue from './pages/NewIssue';
+import NewChangeRequest from './pages/NewChangeRequest';
+import NewMember from './pages/NewMember';
 
 function App() {
   return (
@@ -33,6 +37,10 @@ function App() {
             <Route exact path="/tasks" element={<Tasks />} />
             <Route exact path="/chat" element={<Chat/>}/>
             <Route exact path="/new_project" element={<NewProject />} />
+            <Route exact path="/task" element={<Task/>} />
+            <Route exact path="/new_issue" element={<NewIssue />} />
+            <Route exact path="/new_change_request" element={<NewChangeRequest />} />
+            <Route exact path="/new_member" element={<NewMember />} />
           </Routes>
         </div>
       </div>

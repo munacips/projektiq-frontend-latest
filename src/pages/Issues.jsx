@@ -4,19 +4,19 @@ import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 
 function Issues() {
-
-    const [issues, setIssues] = useState(null); // State to hold issues details
-    const [loading, setLoading] = useState(true); // Loading state
+    const [issues, setIssues] = useState(null);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const [key, setKey] = useState(0);
+
     const markAsDone = async (id) => {
         try {
             const accessToken = localStorage.getItem('accessToken')
             const csrfToken = Cookies.get('csrftoken')
-            const response = await axios.put(`http://localhost:8000/my_issues/`, 
+            const response = await axios.put(`http://localhost:8000/my_issues/`,
                 {
-                    id: id 
-                }, 
+                    id: id
+                },
                 {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
@@ -25,7 +25,7 @@ function Issues() {
                     }
                 }
             );
-            
+
             if (response.status === 200) {
                 window.alert("Marked as done!")
                 setKey(prevKey => prevKey + 1);
@@ -92,753 +92,247 @@ function Issues() {
             }
         }
         fetchIssues()
-    }, [navigate,key])
+    }, [navigate, key])
+
+    if (loading) {
+        return (
+            <div style={styles.loadingContainer}>
+                <div style={styles.loader}></div>
+            </div>
+        );
+    }
 
     return (
         <div style={styles.container}>
-            {loading ? (
-                <p style={styles.loading}>Loading issues...</p>
-            ) : (
-                <>
-                    <h1>Issues</h1>
-                    <ul style={styles.taskList}>
-                        {issues && issues.length > 0 ? (
-                            issues
-                                .filter(issue => !issue.closed) // Filter out implemented issues
-                                .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
-                                .map(issue => (
-                                <li key={issue.id} style={styles.taskItem}>
-                                    <b>{issue.issue}</b> <i>{issue.project_name}</i><br />
-                                    <small>{issue.description}</small><br />
-                                    <small>Assigned by : {issue.assigned_by} on {new Date(issue.date_created).toDateString()}</small><br />
-                                    <small><i>{issue.attendants_names.join(', ')}</i></small><br />
-                                    {new Date() > new Date(issue.due_date) ? (
-                                        <small style={styles.due}>Due date : {new Date(issue.due_date).toDateString()}</small>
-                                    ) : (
-                                        <small style={styles.notdue} >Due date : {new Date(issue.due_date).toDateString()}</small>
-                                    )} <br />
-                                    <button style={styles.button} onClick={()=>{markAsDone(issue.id)}} >Mark as done</button> <button style={styles.button} onClick={()=>{navigate(`/issue/${issue.id}`)}}>Open</button>
-                                </li>
-                            ))
-                        ) : (
-                            <p style={styles.noTasks}>No issues available.</p>
-                        )}
-                    </ul>
-                    <h2>Issues Done</h2>
-                    <ul style={styles.taskList}>
-                        {issues && issues.length > 0 ? (
-                            issues
-                                .filter(issue => issue.closed) // Filter out implemented issues
-                                .sort((a, b) => new Date(b.date_updated) - new Date(a.date_updated))
-                                .map(issue => (
-                                <li key={issue.id} style={styles.taskItem}>
-                                    <b>{issue.issue}</b> <i>{issue.project_name}</i><br />
-                                    <small>{issue.description}</small><br />
-                                    <small>Assigned by : {issue.assigned_by} on {new Date(issue.date_created).toDateString()}</small><br />
-                                    <small>Done on : {new Date(issue.date_updated).toDateString()}</small><br />
-                                    <button style={styles.button} onClick={()=>{navigate(`/issue/${issue.id}`)}}>Open</button>
-                                
-                                </li>
-                            ))
-                        ) : (
-                            <p style={styles.noTasks}>No issues available.</p>
-                        )}
-                    </ul>
-                </>
-            )}
+            <div style={styles.header}>
+                <h1 style={styles.title}>My Issues</h1>
+            </div>
+
+            <div style={styles.content}>
+                <div style={styles.section}>
+                    <h2 style={styles.sectionTitle}>Active Issues</h2>
+                    <div style={styles.taskGrid}>
+                        {issues?.filter(issue => !issue.closed)
+                            .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+                            .map(issue => (
+                                <div key={issue.id} style={styles.taskCard}>
+                                    <div style={styles.taskHeader}>
+                                        <h3 style={styles.taskTitle}>{issue.issue}</h3>
+                                        <span style={styles.projectName}>{issue.project_name}</span>
+                                    </div>
+                                    <p style={styles.description}>{issue.description}</p>
+                                    <div style={styles.attendants}>
+                                        <span style={styles.attendantsLabel}>Attendants:</span>
+                                        <span style={styles.attendantsNames}>{issue.attendants_names.join(', ')}</span>
+                                    </div>
+                                    <div style={styles.taskFooter}>
+                                        <div style={styles.dates}>
+                                            <span style={styles.dateLabel}>Created:</span>
+                                            <span style={styles.dateValue}>
+                                                {new Date(issue.date_created).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        {issue.due_date && (
+                                            <div style={styles.dates}>
+                                                <span style={styles.dateLabel}>Due:</span>
+                                                <span style={{
+                                                    ...styles.dateValue,
+                                                    color: new Date() > new Date(issue.due_date) ? '#e53e3e' : '#38a169'
+                                                }}>
+                                                    {new Date(issue.due_date).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div style={styles.buttonGroup}>
+                                            <button
+                                                style={styles.completeButton}
+                                                onClick={() => markAsDone(issue.id)}
+                                            >
+                                                Mark as Done
+                                            </button>
+                                            <button
+                                                style={styles.viewButton}
+                                                onClick={() => navigate(`/issue/${issue.id}`)}
+                                            >
+                                                View Details
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                </div>
+
+                <div style={styles.section}>
+                    <h2 style={styles.sectionTitle}>Completed Issues</h2>
+                    <div style={styles.taskGrid}>
+                        {issues?.filter(issue => issue.closed)
+                            .sort((a, b) => new Date(b.date_updated) - new Date(a.date_updated))
+                            .map(issue => (
+                                <div key={issue.id} style={{ ...styles.taskCard, opacity: 0.8 }}>
+                                    <div style={styles.taskHeader}>
+                                        <h3 style={styles.taskTitle}>{issue.issue}</h3>
+                                        <span style={styles.completedBadge}>Completed</span>
+                                    </div>
+                                    <p style={styles.description}>{issue.description}</p>
+                                    <div style={styles.taskFooter}>
+                                        <div style={styles.dates}>
+                                            <span style={styles.dateLabel}>Completed:</span>
+                                            <span style={styles.dateValue}>
+                                                {new Date(issue.date_updated).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <button
+                                            style={styles.viewButton}
+                                            onClick={() => navigate(`/issue/${issue.id}`)}
+                                        >
+                                            View Details
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                </div>
+            </div>
         </div>
-    )
+    );
 }
-const issue  = {
-    "id": 3,
-    "issue": "No Total",
-    "description": "No Total",
-    "project": 3,
-    "project_name": "Loan Management",
-    "date_created": "2024-11-21T09:18:48.021347Z",
-    "date_updated": "2024-11-21T09:18:48.021347Z",
-    "assigned_to": null,
-    "attendants": [
-        1
-    ],
-    "attendants_names": [
-        "munacips"
-    ],
-    "due_date": null,
-    "assigned_by": null,
-    "closed": false,
-    "comments": [
-        {
-            "id": 19,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "tttt",
-            "date_created": "2024-11-27T09:24:40.538844Z",
-            "date_updated": "2024-11-27T09:24:40.538844Z"
-        },
-        {
-            "id": 18,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "hello",
-            "date_created": "2024-11-27T09:22:47.480398Z",
-            "date_updated": "2024-11-27T09:22:47.480398Z"
-        },
-        {
-            "id": 17,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "Hie, How are you",
-            "date_created": "2024-11-27T09:22:38.270250Z",
-            "date_updated": "2024-11-27T09:22:38.270250Z"
-        },
-        {
-            "id": 16,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "Hie, How are you",
-            "date_created": "2024-11-27T09:17:22.417434Z",
-            "date_updated": "2024-11-27T09:17:22.417434Z"
-        },
-        {
-            "id": 15,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "HIe",
-            "date_created": "2024-11-27T09:14:32.944445Z",
-            "date_updated": "2024-11-27T09:14:32.944445Z"
-        },
-        {
-            "id": 14,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "tyy",
-            "date_created": "2024-11-27T09:12:16.686395Z",
-            "date_updated": "2024-11-27T09:12:16.686395Z"
-        },
-        {
-            "id": 13,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "bhe",
-            "date_created": "2024-11-27T09:11:37.598254Z",
-            "date_updated": "2024-11-27T09:11:37.598254Z"
-        },
-        {
-            "id": 12,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "ui",
-            "date_created": "2024-11-27T09:08:07.725927Z",
-            "date_updated": "2024-11-27T09:08:07.725927Z"
-        },
-        {
-            "id": 11,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "ui",
-            "date_created": "2024-11-27T09:07:10.855746Z",
-            "date_updated": "2024-11-27T09:07:10.855746Z"
-        },
-        {
-            "id": 10,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "yoooooooo",
-            "date_created": "2024-11-27T09:03:52.513652Z",
-            "date_updated": "2024-11-27T09:03:52.513652Z"
-        },
-        {
-            "id": 9,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "ee",
-            "date_created": "2024-11-27T08:33:52.571528Z",
-            "date_updated": "2024-11-27T08:33:52.571528Z"
-        },
-        {
-            "id": 8,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "hello, Jussie",
-            "date_created": "2024-11-27T08:25:50.366196Z",
-            "date_updated": "2024-11-27T08:25:50.366196Z"
-        },
-        {
-            "id": 7,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "Hello, how are you, wahala:",
-            "date_created": "2024-11-27T08:19:45.266777Z",
-            "date_updated": "2024-11-27T08:19:45.266777Z"
-        },
-        {
-            "id": 6,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "Hello, how are you, wahala, 99999",
-            "date_created": "2024-11-27T08:19:13.294793Z",
-            "date_updated": "2024-11-27T08:19:13.294793Z"
-        },
-        {
-            "id": 5,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "When was this logged here",
-            "date_created": "2024-11-27T07:40:42.221120Z",
-            "date_updated": "2024-11-27T07:40:42.221120Z"
-        },
-        {
-            "id": 1,
-            "parent": null,
-            "issue": {
-                "id": 3,
-                "issue": "No Total",
-                "description": "No Total",
-                "date_created": "2024-11-21T09:18:48.021347Z",
-                "date_updated": "2024-11-21T09:18:48.021347Z",
-                "due_date": null,
-                "closed": false,
-                "project": 3,
-                "assigned_to": null,
-                "assigned_by": null,
-                "attendants": [
-                    1
-                ]
-            },
-            "user": {
-                "id": 1,
-                "password": "pbkdf2_sha256$870000$q2njwf33Cym3wd4p9wwdN6$xe6QvrbRbcx6xYn5Td9Emygfa8P36ooJvbPlruiKL2E=",
-                "last_login": "2024-12-02T06:22:50.469881Z",
-                "is_superuser": true,
-                "username": "munacips",
-                "first_name": "",
-                "last_name": "",
-                "email": "munacips@gmail.com",
-                "is_staff": true,
-                "is_active": true,
-                "date_joined": "2024-10-28T06:57:36.191981Z",
-                "phone_number": null,
-                "date_of_birth": null,
-                "groups": [],
-                "user_permissions": []
-            },
-            "comment": "Can you please elaborate",
-            "date_created": "2024-11-27T07:33:56.456289Z",
-            "date_updated": "2024-11-27T07:33:56.456289Z"
-        }
-    ]
-}
+
 const styles = {
-    due: {
-        textDecoration: 'line-through',
-        color: 'red'
-    },
-    notdue: {
-        color: 'green'
-    },
+    // ... keep existing loading styles ...
     container: {
+        padding: '32px',
+        maxWidth: '1400px',
+        margin: '0 auto',
+    },
+    header: {
+        marginBottom: '32px',
+    },
+    title: {
+        fontSize: '32px',
+        fontWeight: '600',
+        color: '#2d3748',
+        margin: 0,
+    },
+    content: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '48px',
+    },
+    section: {
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '24px',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+    },
+    sectionTitle: {
+        fontSize: '24px',
+        fontWeight: '600',
+        color: '#2d3748',
+        marginBottom: '24px',
+    },
+    taskGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+        gap: '24px',
+    },
+    taskCard: {
+        backgroundColor: 'white',
+        borderRadius: '8px',
         padding: '20px',
-        backgroundColor: '#f9f9f9',
-        borderRadius: '5px',
-        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
     },
-    loading: {
+    taskHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: '16px',
+    },
+    taskTitle: {
         fontSize: '18px',
-        color: '#555',
+        fontWeight: '600',
+        color: '#2d3748',
+        margin: 0,
     },
-    taskList: {
-        listStyleType: 'none',
-        padding: 0,
-    },
-    taskItem: {
-        padding: '10px',
-        margin: '5px 0',
-        backgroundColor: '#fff',
-        borderRadius: '3px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    },
-    noTasks: {
-        color: '#888',
+    projectName: {
+        fontSize: '14px',
+        color: '#4a5568',
         fontStyle: 'italic',
     },
-    button: {
-        marginTop: 'auto',
-        padding: '5px 10px',
-        backgroundColor: '#007bff',
-        color: '#fff',
+    description: {
+        fontSize: '14px',
+        color: '#4a5568',
+        marginBottom: '16px',
+        lineHeight: '1.6',
+    },
+    attendants: {
+        marginBottom: '16px',
+    },
+    attendantsLabel: {
+        fontSize: '14px',
+        color: '#718096',
+        marginRight: '8px',
+    },
+    attendantsNames: {
+        fontSize: '14px',
+        color: '#4a5568',
+    },
+    taskFooter: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '12px',
+    },
+    buttonGroup: {
+        display: 'flex',
+        gap: '8px',
+    },
+    completeButton: {
+        backgroundColor: '#4299e1',
+        color: 'white',
         border: 'none',
-        borderRadius: '5px',
+        borderRadius: '6px',
+        padding: '8px 16px',
+        fontSize: '14px',
+        fontWeight: '500',
         cursor: 'pointer',
-        textDecoration: 'none'
+        transition: 'background-color 0.2s',
+    },
+    viewButton: {
+        backgroundColor: '#718096',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        padding: '8px 16px',
+        fontSize: '14px',
+        fontWeight: '500',
+        cursor: 'pointer',
+        transition: 'background-color 0.2s',
+    },
+    completedBadge: {
+        backgroundColor: '#48bb78',
+        color: 'white',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        fontSize: '12px',
+        fontWeight: '500',
+    },
+    loadingContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+    },
+    loader: {
+        border: '4px solid #f3f3f3',
+        borderTop: '4px solid #3498db',
+        borderRadius: '50%',
+        width: '40px',
+        height: '40px',
+        animation: 'spin 1s linear infinite',
     },
 };
 
-
-
-export default Issues
+export default Issues;
