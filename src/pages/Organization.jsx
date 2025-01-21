@@ -1,10 +1,10 @@
-// src/pages/Organization.jsx
 import { useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { Button, IconButton, Tooltip } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import EditIcon from "@mui/icons-material/Edit";
+import { People } from "@mui/icons-material";
 
 function Organization() {
     const navigate = useNavigate();
@@ -13,6 +13,8 @@ function Organization() {
     const [upcomingProjects, setUpcomingProjects] = useState([]);
     const [pastProjects, setPastProjects] = useState([]);
     const [pendingIssues, setPendingIssues] = useState([]);
+    const username = localStorage.getItem("username");
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (organization) {
@@ -42,19 +44,26 @@ function Organization() {
             setUpcomingProjects(upcoming);
             setPastProjects(past);
             setPendingIssues(issues);
+            setIsLoading(false);
         }
     }, [organization]);
 
-    const primaryColor = "#4299e1"; // Main purple theme
+    const primaryColor = "#4299e1";
     const secondaryColor = "#4F46E5";
-    
-    const handleAddMember = () => {
-        // Implement member addition logic
-    };
 
     const handleAddProject = () => {
         // Implement project addition logic
     };
+
+    if (!organization) {
+        return (
+            <div style={styles.pageWrapper}>
+                <div style={styles.container}>
+                    <h1>No organization data found</h1>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div style={styles.pageWrapper}>
@@ -73,12 +82,29 @@ function Organization() {
                                     <Button
                                         variant="contained"
                                         startIcon={<PersonAddIcon />}
-                                        onClick={()=>{navigate('/new_member', { state: { organization } })}}
+                                        onClick={() => { navigate('/new_member', { state: { organization } }) }}
                                         style={styles.actionButton}
                                     >
                                         Add Member
                                     </Button>
                                 </Tooltip>
+                                {
+                                    organization.members.some(member =>
+                                        member.username === username && member.role === "General Manager" || member.role === "Admin"
+                                    ) && (
+                                        <Tooltip title="Manage Members">
+                                            <Button
+                                                variant="contained"
+                                                startIcon={<People />}
+                                                onClick={() => {navigate('/manage_members', { state: { organization } })}}
+                                                style={styles.actionButton}
+                                            >
+                                                Manage Members
+                                            </Button>
+                                        </Tooltip>
+                                    )
+                                }
+
                                 <Tooltip title="Add Project">
                                     <Button
                                         variant="contained"
@@ -154,7 +180,7 @@ function Organization() {
                         <div style={styles.issuesGrid}>
                             {pendingIssues.map(issue => (
                                 <div key={issue.id} style={styles.issueCard}>
-                                    <div style={styles.issuePriority(issue.priority)}>
+                                    <div style={styles.issuePriority}>
                                         {issue.priority || 'Medium'}
                                     </div>
                                     <h4 style={styles.issueTitle}>{issue.issue}</h4>
@@ -180,7 +206,7 @@ function Organization() {
                             <div key={project.id} style={styles.projectCard}>
                                 <div style={styles.projectCardHeader}>
                                     <h3 style={styles.projectCardTitle}>{project.name}</h3>
-                                    <span style={styles.projectStatus(project.status)}>
+                                    <span style={styles.projectStatus}>
                                         {project.status}
                                     </span>
                                 </div>
@@ -227,6 +253,9 @@ const styles = {
         marginBottom: '32px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     },
+    headerContent: {
+        width: '100%',
+    },
     orgTitleSection: {
         display: 'flex',
         justifyContent: 'space-between',
@@ -258,27 +287,6 @@ const styles = {
             backgroundColor: 'rgba(255, 255, 255, 0.2)',
         },
     },
-    sectionHeader: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '20px',
-    },
-    projectCardTitle:{
-        fontSize: '1.5rem',
-        fontWeight: '600',
-        color: '#333333',
-        marginBottom: '12px',
-    },
-    projectCard: {
-        background: '#ffffff',
-        borderRadius: '12px',
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-        transition: 'transform 0.2s ease-in-out',
-        '&:hover': {
-            transform: 'translateY(-4px)',
-        },
-    },
     statsContainer: {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -291,20 +299,118 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        color: '#ffffff',
+    },
+    statIcon: {
+        fontSize: '24px',
+        marginBottom: '8px',
     },
     statNumber: {
         fontSize: '2rem',
         fontWeight: '700',
         marginBottom: '4px',
     },
-    projectStatus: (status) => ({
-        padding: '6px 12px',
-        borderRadius: '20px',
+    statLabel: {
         fontSize: '0.875rem',
-        fontWeight: '500',
-        background: status === 'Active' ? '#34d399' : '#cbd5e1',
-        color: status === 'Active' ? '#064e3b' : '#475569',
-    }),
+        opacity: '0.9',
+    },
+    quickView: {
+        marginBottom: '32px',
+    },
+    upcomingSection: {
+        background: '#ffffff',
+        borderRadius: '16px',
+        padding: '24px',
+        marginBottom: '24px',
+    },
+    sectionHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+    },
+    sectionTitle: {
+        fontSize: '1.5rem',
+        fontWeight: '600',
+        color: '#1a202c',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+    },
+    titleIcon: {
+        fontSize: '1.5rem',
+    },
+    upcomingGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+        gap: '20px',
+    },
+    upcomingCard: {
+        background: '#f8fafc',
+        borderRadius: '12px',
+        padding: '16px',
+        border: '1px solid #e2e8f0',
+    },
+    projectHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '12px',
+    },
+    projectName: {
+        fontSize: '1.25rem',
+        fontWeight: '600',
+        color: '#2d3748',
+    },
+    projectDesc: {
+        fontSize: '0.875rem',
+        color: '#4a5568',
+        marginBottom: '16px',
+    },
+    projectMeta: {
+        display: 'flex',
+        gap: '16px',
+    },
+    metaItem: {
+        fontSize: '0.75rem',
+        color: '#718096',
+    },
+    issuesSection: {
+        background: '#ffffff',
+        borderRadius: '16px',
+        padding: '24px',
+    },
+    issuesGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+        gap: '16px',
+    },
+    issueCard: {
+        background: '#f8fafc',
+        borderRadius: '8px',
+        padding: '16px',
+        border: '1px solid #e2e8f0',
+    },
+    issueTitle: {
+        fontSize: '1rem',
+        fontWeight: '600',
+        color: '#2d3748',
+        marginBottom: '8px',
+    },
+    issueDesc: {
+        fontSize: '0.875rem',
+        color: '#4a5568',
+        marginBottom: '12px',
+    },
+    issueFooter: {
+        fontSize: '0.75rem',
+        color: '#718096',
+    },
+    projectsSection: {
+        background: '#ffffff',
+        borderRadius: '16px',
+        padding: '24px',
+    },
     projectsGrid: {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',

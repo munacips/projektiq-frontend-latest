@@ -29,10 +29,12 @@ function NewMember() {
     const [error, setError] = useState('');
 
     const roles = [
-        { value: 'ADMIN', label: 'Administrator' },
-        { value: 'MANAGER', label: 'Project Manager' },
-        { value: 'MEMBER', label: 'Team Member' },
-        { value: 'VIEWER', label: 'Viewer' }
+        { value: 'General Manager', label: 'General Manager' },
+        { value: 'Admin', label: 'Admin' },
+        { value: 'Developer', label: 'Developer' },
+        { value: 'Tester', label: 'Tester' },
+        { value: 'Maintainer', label: 'Maintainer' },
+        { value: 'Member', label: 'Member' }
     ];
 
     const handleUserSearch = async (query) => {

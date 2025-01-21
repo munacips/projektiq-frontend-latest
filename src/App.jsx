@@ -17,6 +17,7 @@ import Task from './pages/Task';
 import NewIssue from './pages/NewIssue';
 import NewChangeRequest from './pages/NewChangeRequest';
 import NewMember from './pages/NewMember';
+import ManageOrganizationMembers from './pages/ManageOrganizationMembers';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
             <Route exact path="/new_issue" element={<NewIssue />} />
             <Route exact path="/new_change_request" element={<NewChangeRequest />} />
             <Route exact path="/new_member" element={<NewMember />} />
+            <Route exact path="/manage_members" element={<ManageOrganizationMembers />} />
           </Routes>
         </div>
       </div>

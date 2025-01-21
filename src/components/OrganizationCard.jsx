@@ -23,7 +23,7 @@ function OrganizationCard({organization}) {
             <div style={styles.footer}>
                 <button 
                     style={styles.viewButton} 
-                    onClick={() => navigate(`/organization`, {state: {organization}})}
+                    onClick={() => navigate('/organization', { state: { organization: organization } })}
                 >
                     View Organization
                 </button>
