@@ -5,11 +5,13 @@ import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import EditIcon from "@mui/icons-material/Edit";
 import { People } from "@mui/icons-material";
+import { useOrganization } from '../components/OrganizationContext';
 
 function Organization() {
     const navigate = useNavigate();
+    const { organization, setOrganization } = useOrganization();
     const location = useLocation();
-    const { organization } = location.state || {};
+    //const { organization } = location.state || {};
     const [upcomingProjects, setUpcomingProjects] = useState([]);
     const [pastProjects, setPastProjects] = useState([]);
     const [pendingIssues, setPendingIssues] = useState([]);
@@ -17,6 +19,12 @@ function Organization() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        // If organization is passed via location state, update context
+        if (location.state?.organization) {
+            setOrganization(location.state.organization);
+        }
+
+        // Your existing logic for processing projects, issues, etc.
         if (organization) {
             const today = new Date();
             const upcoming = [];
@@ -46,7 +54,7 @@ function Organization() {
             setPendingIssues(issues);
             setIsLoading(false);
         }
-    }, [organization]);
+    }, [organization, location.state, setOrganization]);
 
     const primaryColor = "#4299e1";
     const secondaryColor = "#4F46E5";

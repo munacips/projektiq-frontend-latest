@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import {useLocation, useNavigate} from 'react-router-dom'
 import axios from 'axios'
 import Cookies from 'js-cookie'
+import { useOrganization } from '../components/OrganizationContext';
 import {
   Table,
   TableBody,
@@ -22,24 +23,38 @@ import {
 
 function ManageOrganizationMembers() {
   const location = useLocation()
-  const organization = location.state.organization
+  //const organization = location.state.organization
   const [openAddDialog, setOpenAddDialog] = useState(false)
   const [newMember, setNewMember] = useState({ username: '', role: 'MEMBER' })
   const [editMember, setEditMember] = useState(null)
   const clientId = process.env.REACT_APP_CLIENT_ID
   const clientSecret = process.env.REACT_APP_CLIENT_SECRET
   const navigate = useNavigate()
+  const accessToken = localStorage.getItem('accessToken')
+  const csrfToken = Cookies.get('csrftoken')
+  
+  const { organization, setOrganization } = useOrganization();
 
-  const handleAddMember = () => {
-    // API call to add member would go here
-    setOpenAddDialog(false)
-    setNewMember({ username: '', role: 'MEMBER' })
-  }
+  const fetchUpdatedOrganization = async (orgId) => {
+    try {
+  
+      const response = await axios.get(`http://localhost:8000/organizations/${orgId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        }
+      });
+  
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching updated organization:', error);
+      throw error;
+    }
+  };
 
   const handleRemoveMember = async (memberId) => {
     try {
-        const accessToken = localStorage.getItem('accessToken')
-        const csrfToken = Cookies.get('csrftoken')
 
         if (!accessToken) {
           navigate('/login')
@@ -56,8 +71,11 @@ function ManageOrganizationMembers() {
             'X-CSRFToken': csrfToken
           }
         })
-
-        console.log(response.data) //member removed
+        if (response.status === 200) {
+          const updatedOrganization = await fetchUpdatedOrganization(organization.id)
+          setOrganization(updatedOrganization)
+          console.log(response.data) //member removed
+        }
       } catch (error) {
         if (error.response?.status === 401) {
           navigate('/login') //await handleTokenRefresh()
@@ -66,8 +84,37 @@ function ManageOrganizationMembers() {
     console.log('Removing member:', memberId)
   }
 
-  const handleRoleChange = (memberId, newRole) => {
-    // API call to update member role would go here
+  const handleRoleChange = async (memberId, newRole) => {
+    try {
+        if (!accessToken) {
+          navigate('/login')
+          return
+        }
+
+        const response = await axios.post("http://localhost:8000/update_member_role/",{
+            user_id: memberId,
+            role: newRole,
+            org_id: organization.id
+        }, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+          }
+        })
+        if (response.status === 200) {
+          const updatedOrg = await fetchUpdatedOrganization(organization.id);
+          setOrganization(updatedOrg);
+        }
+
+        console.log(response.data) //role updated
+      } catch (error) {
+        if (error.response?.status === 401) {
+          navigate('/login') //await handleTokenRefresh()
+        } else {
+          console.error('Error updating role:', error)
+        }
+      }
     console.log('Updating role for member:', memberId, 'to:', newRole)
   }
 
@@ -78,7 +125,7 @@ function ManageOrganizationMembers() {
         <Button 
           variant="contained" 
           color="primary"
-          onClick={() => setOpenAddDialog(true)}
+          onClick={() => navigate('/new_member', { state: { organization } })}
         >
           Add Member
         </Button>
@@ -108,6 +155,10 @@ function ManageOrganizationMembers() {
                     <MenuItem value="MEMBER">Member</MenuItem>
                     <MenuItem value="Admin">Admin</MenuItem>
                     <MenuItem value="Manager">Manager</MenuItem>
+                    <MenuItem value="General Manager">General Manager</MenuItem>
+                    <MenuItem value="Tester">Tester</MenuItem>
+                    <MenuItem value="Maintainer">Maintainer</MenuItem>
+                    <MenuItem value="Developer">Developer</MenuItem>
                   </Select>
                 </TableCell>
                 <TableCell>
@@ -131,36 +182,6 @@ function ManageOrganizationMembers() {
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* Add Member Dialog */}
-      <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)}>
-        <DialogTitle>Add New Member</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Username"
-            fullWidth
-            value={newMember.username}
-            onChange={(e) => setNewMember({ ...newMember, username: e.target.value })}
-          />
-          <Select
-            fullWidth
-            value={newMember.role}
-            onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
-            className="mt-4"
-          >
-            <MenuItem value="MEMBER">Member</MenuItem>
-            <MenuItem value="Manager">Manager</MenuItem>
-          </Select>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenAddDialog(false)}>Cancel</Button>
-          <Button onClick={handleAddMember} variant="contained" color="primary">
-            Add
-          </Button>
-        </DialogActions>
-      </Dialog>
     </div>
   )
 }
