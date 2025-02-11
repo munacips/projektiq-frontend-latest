@@ -117,7 +117,7 @@ function Organization() {
                                     <Button
                                         variant="contained"
                                         startIcon={<AddIcon />}
-                                        onClick={handleAddProject}
+                                        onClick={()=>{navigate('/new_project', { state: { organization } })}}
                                         style={styles.actionButton}
                                     >
                                         New Project

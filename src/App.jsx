@@ -19,36 +19,45 @@ import NewChangeRequest from './pages/NewChangeRequest';
 import NewMember from './pages/NewMember';
 import ManageOrganizationMembers from './pages/ManageOrganizationMembers';
 import { OrganizationProvider } from './components/OrganizationContext';
+import { ProjectProvider } from './components/ProjectContext';
+import ProjectManagePage from './pages/ProjectManagePage';
+import NewProjectMember from './pages/NewProjectMember';
+import ManageProjectMembers from './pages/ManageProjectMembers';
 
 function App() {
   return (
     <OrganizationProvider>
-      <Router>
-        <div style={styles.appContainer}>
-          <SideBar />
-          <div style={styles.mainContent}>
-            <Routes>
-              <Route exact path='/' element={<HomePage />}></Route>
-              <Route exact path='/login' element={<Login />}></Route>
-              <Route exact path="/project/:id" element={<Project />} />
-              <Route exact path="/issue/:id" element={<IssuePage />} />
-              <Route exah path='/change_request/:id' element={<ChangeRequest />} />
-              <Route exact path="/issues" element={<Issues />} />
-              <Route exact path="/schedule" element={<Schedule />} />
-              <Route exact path="/projects" element={<Projects />} />
-              <Route exact path="/organization" element={<Organization />} />
-              <Route exact path="/tasks" element={<Tasks />} />
-              <Route exact path="/chat" element={<Chat />} />
-              <Route exact path="/new_project" element={<NewProject />} />
-              <Route exact path="/task" element={<Task />} />
-              <Route exact path="/new_issue" element={<NewIssue />} />
-              <Route exact path="/new_change_request" element={<NewChangeRequest />} />
-              <Route exact path="/new_member" element={<NewMember />} />
-              <Route exact path="/manage_members" element={<ManageOrganizationMembers />} />
-            </Routes>
+      <ProjectProvider>
+        <Router>
+          <div style={styles.appContainer}>
+            <SideBar />
+            <div style={styles.mainContent}>
+              <Routes>
+                <Route exact path='/' element={<HomePage />}></Route>
+                <Route exact path='/project_management' element={<ProjectManagePage />}></Route>
+                <Route exact path='/login' element={<Login />}></Route>
+                <Route exact path="/project/:id" element={<Project />} />
+                <Route exact path="/issue/:id" element={<IssuePage />} />
+                <Route exah path='/change_request/:id' element={<ChangeRequest />} />
+                <Route exact path="/issues" element={<Issues />} />
+                <Route exact path="/schedule" element={<Schedule />} />
+                <Route exact path="/projects" element={<Projects />} />
+                <Route exact path="/organization" element={<Organization />} />
+                <Route exact path="/tasks" element={<Tasks />} />
+                <Route exact path="/chat" element={<Chat />} />
+                <Route exact path="/new_project" element={<NewProject />} />
+                <Route exact path="/task" element={<Task />} />
+                <Route exact path="/new_issue" element={<NewIssue />} />
+                <Route exact path="/new_change_request" element={<NewChangeRequest />} />
+                <Route exact path="/new_member" element={<NewMember />} />
+                <Route exact path="/manage_members" element={<ManageOrganizationMembers />} />
+                <Route exach path="/new_project_member" element={<NewProjectMember />} />
+                <Route exact path="manage_project_members" element={<ManageProjectMembers />} />
+              </Routes>
+            </div>
           </div>
-        </div>
-      </Router>
+        </Router>
+      </ProjectProvider>
     </OrganizationProvider>
   );
 }

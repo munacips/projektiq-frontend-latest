@@ -97,6 +97,9 @@ function Project() {
                         {project.organization_names.map((org, index) => (
                             <span key={index} style={styles.orgBadge}>{org}</span>
                         ))}
+                    </div><br />
+                    <div>
+                        <button style={styles.addButton} onClick={() => {navigate('/project_management',{state : {project} })}}>Management</button>
                     </div>
                 </div>
                 <div style={styles.statusBadge}>

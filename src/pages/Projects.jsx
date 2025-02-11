@@ -122,6 +122,7 @@ const styles = {
     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
     transition: 'transform 0.2s, box-shadow 0.2s',
     border: '1px solid #e0e0e0',
+    cursor: 'pointer',
   },
   cardHover: {
     transform: 'translateY(-5px)',

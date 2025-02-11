@@ -1,7 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Cookies from 'js-cookie'
 import axios from "axios";
+import { useOrganization } from '../components/OrganizationContext';
 import {
     TextField,
     Autocomplete,
@@ -18,9 +19,10 @@ import {
 function NewMember() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { organization } = location.state || {};
+    //const { organization } = location.state || {};
     const accessToken = localStorage.getItem('accessToken');
     const csrfToken = Cookies.get('csrftoken');
+    const { organization, setOrganization } = useOrganization();
     
     const [selectedUser, setSelectedUser] = useState(null);
     const [role, setRole] = useState('');
@@ -36,6 +38,12 @@ function NewMember() {
         { value: 'Maintainer', label: 'Maintainer' },
         { value: 'Member', label: 'Member' }
     ];
+
+    useEffect(() => {
+        if (location.state?.organization) {
+            setOrganization(location.state.organization);
+        }
+    }, [organization, location.state, setOrganization]);
 
     const handleUserSearch = async (query) => {
         if (query.length < 2) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useLocation } from 'react-router-dom';
 import { Button, TextField, Container, Typography, Box, Paper, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import axios from 'axios'
 import Cookies from 'js-cookie'
@@ -9,6 +9,8 @@ const NewProject = () => {
   const [organizations, setOrganizations] = useState([]);
   const clientId = process.env.REACT_APP_CLIENT_ID
   const clientSecret = process.env.REACT_APP_CLIENT_SECRET
+  const location = useLocation();
+  const { organization } = location.state || {};
   const [projectData, setProjectData] = useState({
     name: '',
     description: '',
@@ -19,6 +21,12 @@ const NewProject = () => {
   });
 
   useEffect(() => {
+    if (organization) {
+      setProjectData(prev => ({
+        ...prev,
+        participantOrganizations: [organization.id]
+      }))
+    }
     const fetchOrganisations = async () => {
       try {
         const accessToken = localStorage.getItem('accessToken')
@@ -206,6 +214,10 @@ const NewProject = () => {
             margin="normal"
             InputLabelProps={{ shrink: true }}
           />
+         
+
+        
+
           <FormControl fullWidth margin="normal">
             <InputLabel id="organizations-label">Participant Organizations</InputLabel>
             <Select

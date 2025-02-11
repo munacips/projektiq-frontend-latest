@@ -24,11 +24,6 @@ import {
 function ManageOrganizationMembers() {
   const location = useLocation()
   //const organization = location.state.organization
-  const [openAddDialog, setOpenAddDialog] = useState(false)
-  const [newMember, setNewMember] = useState({ username: '', role: 'MEMBER' })
-  const [editMember, setEditMember] = useState(null)
-  const clientId = process.env.REACT_APP_CLIENT_ID
-  const clientSecret = process.env.REACT_APP_CLIENT_SECRET
   const navigate = useNavigate()
   const accessToken = localStorage.getItem('accessToken')
   const csrfToken = Cookies.get('csrftoken')
@@ -74,7 +69,7 @@ function ManageOrganizationMembers() {
         if (response.status === 200) {
           const updatedOrganization = await fetchUpdatedOrganization(organization.id)
           setOrganization(updatedOrganization)
-          console.log(response.data) //member removed
+          
         }
       } catch (error) {
         if (error.response?.status === 401) {
