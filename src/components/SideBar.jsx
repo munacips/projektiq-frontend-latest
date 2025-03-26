@@ -1,5 +1,5 @@
 import React from 'react'
-import { FaClock, FaHome, FaShareAlt, FaTachometerAlt, FaToolbox } from 'react-icons/fa'
+import { FaClock, FaHome, FaTachometerAlt, FaToolbox, FaTimesCircle, FaScroll } from 'react-icons/fa'
 import { FaCheck } from 'react-icons/fa'
 import { FaGear, FaMessage } from 'react-icons/fa6'
 import SideBarItem from './SideBarItem'
@@ -14,7 +14,7 @@ function SideBar() {
         <SideBarItem item={<FaToolbox size={30}/>} label={"Issues"} url = "/issues"/> <br/>
         <SideBarItem item={<FaClock size={30}/>} label={"Schedule"} url = "/schedule"/> <br/>
         <SideBarItem item={<FaMessage size={30}/>} label={"Chat"} url = "/chat"/> <br/>
-        <SideBarItem item={<FaShareAlt size={30}/>} label={"Share"} url = "/share"/> <br/>
+        <SideBarItem item={<FaScroll size={30}/>} label={"Timelogs"} url = "/timelogs"/> <br/>
         <SideBarItem item={<FaTachometerAlt size={30}/>} label={"Analytics"} url = "/analytics"/> <br/>
       </nav>
     </div>

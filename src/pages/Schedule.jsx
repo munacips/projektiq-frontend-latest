@@ -149,7 +149,7 @@ function Schedule() {
                         required
                     />
                     <input
-                        type="date"
+                        type="datetime-local"
                         name="due_date"
                         value={formData.due_date}
                         onChange={handleChange}

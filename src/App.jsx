@@ -23,6 +23,9 @@ import { ProjectProvider } from './components/ProjectContext';
 import ProjectManagePage from './pages/ProjectManagePage';
 import NewProjectMember from './pages/NewProjectMember';
 import ManageProjectMembers from './pages/ManageProjectMembers';
+import RequirementPage from './pages/RequirementPage';
+import NewRequirement from './pages/NewRequirement';
+import Timelogs from './pages/Timelogs';
 
 function App() {
   return (
@@ -52,7 +55,10 @@ function App() {
                 <Route exact path="/new_member" element={<NewMember />} />
                 <Route exact path="/manage_members" element={<ManageOrganizationMembers />} />
                 <Route exach path="/new_project_member" element={<NewProjectMember />} />
-                <Route exact path="manage_project_members" element={<ManageProjectMembers />} />
+                <Route exact path="/manage_project_members" element={<ManageProjectMembers />} />
+                <Route exact path="/requirement/:id" element={<RequirementPage />} />
+                <Route exact path="/new_requirement" element={<NewRequirement />} />
+                <Route exact path="/timelogs" element={<Timelogs/>} />
               </Routes>
             </div>
           </div>

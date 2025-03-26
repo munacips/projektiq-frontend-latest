@@ -189,8 +189,8 @@ function ChangeRequest() {
                                   </span>
                               </div>
                               <div style={styles.detailItem}>
-                                  <span style={styles.label}>Project ID</span>
-                                  <span style={styles.value}>{changeRequest?.project}</span>
+                                  <span style={styles.label}>Project Name</span>
+                                  <span style={styles.value}>{changeRequest?.project_name}</span>
                               </div>
                           </div>
                       </section>
