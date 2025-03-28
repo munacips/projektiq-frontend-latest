@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Cookies from "js-cookie";
 
 function Login() {
     const [username, setUsername] = useState('');
@@ -12,13 +13,39 @@ function Login() {
     const clientId = process.env.REACT_APP_CLIENT_ID;
     const clientSecret = process.env.REACT_APP_CLIENT_SECRET;
     const grantType = "password";
-  
+
     const data = new URLSearchParams();
     data.append("grant_type", grantType);
     data.append("username", username);
     data.append("password", password);
     data.append("client_id", clientId);
     data.append("client_secret", clientSecret);
+
+    const getUserId = async (username, accessToken) => {
+        try {
+            const csrfToken = Cookies.get("csrftoken");
+            const response = await axios.post(`http://localhost:8000/userid/`, 
+                { "username": username },
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                }
+            );
+            
+            // Check if the response has the expected structure
+            if (response.data && response.data.id) {
+                return response.data.id;
+            } else {
+                throw new Error("User ID not found in response");
+            }
+        } catch (error) {
+            console.error("Error fetching user ID:", error);
+            throw error; // Re-throw to allow the calling function to handle it
+        }
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -28,15 +55,33 @@ function Login() {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
             });
-            
+
             if (response.status === 200) {
                 const { access_token, refresh_token } = response.data;
                 storeUsername(username);
                 storeTokens(access_token, refresh_token);
+                const userId = await getUserId(username, access_token);
+                localStorage.setItem('userId', userId);
                 navigate('/');
             }
         } catch (error) {
-            setErrorMessage('Invalid username or password');
+            if (error.response) {
+                // Server responded with an error status
+                if (error.response.status === 401 || error.response.status === 400) {
+                    setErrorMessage('Invalid username or password');
+                } else if (error.response.data && error.response.data.detail) {
+                    // Use the error message from the server if available
+                    setErrorMessage(error.response.data.detail);
+                } else {
+                    setErrorMessage(`Server error: ${error.response.status}`);
+                }
+            } else if (error.request) {
+                // Request was made but no response received
+                setErrorMessage('No response from server. Please check your connection.');
+            } else {
+                // Something else caused the error
+                setErrorMessage(`Error: ${error.message}`);
+            }
         }
     };
 
@@ -45,9 +90,9 @@ function Login() {
             <div style={styles.card}>
                 <h1 style={styles.title}>Welcome Back</h1>
                 <p style={styles.subtitle}>Please sign in to continue</p>
-                
+
                 {errorMessage && <div style={styles.error}>{errorMessage}</div>}
-                
+
                 <form onSubmit={handleSubmit} style={styles.form}>
                     <div style={styles.inputGroup}>
                         <input
@@ -59,7 +104,7 @@ function Login() {
                             required
                         />
                     </div>
-                    
+
                     <div style={styles.inputGroup}>
                         <input
                             type="password"
@@ -70,7 +115,7 @@ function Login() {
                             required
                         />
                     </div>
-                    
+
                     <button type="submit" style={styles.button}>
                         Sign In
                     </button>
