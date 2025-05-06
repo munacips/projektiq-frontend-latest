@@ -9,6 +9,13 @@ function Task() {
     const [loading, setLoading] = useState(false);
     const [comment, setComment] = useState('');
 
+    // useEffect(() => {
+    //     if (!task) {
+    //         const taskData = await axios.get(`http://localhost:8000/get_task/${location.state.taskId}/`);
+    //         console.error("No task data available");
+    //     }
+    // }, [task]);
+
     const handleComment = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -66,7 +73,7 @@ function Task() {
                         <div style={styles.metaInfo}>
                             <div style={styles.infoItem}>
                                 <span style={styles.label}>Assigned by:</span>
-                                <span style={styles.value}>{task?.assigned_by}</span>
+                                <span style={styles.value}>{task?.assigned_by_name}</span>
                             </div>
                             <div style={styles.infoItem}>
                                 <span style={styles.label}>Created:</span>

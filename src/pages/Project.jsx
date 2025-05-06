@@ -3,12 +3,53 @@ import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import Cookies from 'js-cookie'
 import { useNavigate } from 'react-router-dom'
+import ProjectGantt from '../components/ProjectGantt'
 
 function Project() {
     const { id } = useParams()
     const [project, setProject] = useState(null)
     const [loading, setLoading] = useState(true)
     const navigate = useNavigate()
+    const [comments, setComments] = useState([])
+    const [newComment, setNewComment] = useState('')
+    const [shouldFetchComments, setShouldFetchComments] = useState(false)
+
+    const handleCommentChange = (e) => {
+        setNewComment(e.target.value)
+    }
+
+    const handleCommentSubmit = async (e) => {
+        e.preventDefault()
+        if (newComment.trim()) {
+            try {
+                const accessToken = localStorage.getItem('accessToken')
+                const csrfToken = Cookies.get('csrftoken')
+
+                if (!accessToken) {
+                    console.error('No access token found')
+                    navigate('/login')
+                    return
+                }
+
+                // Submit the new comment
+                await axios.post(`http://localhost:8000/post_project_comment/${project.id}/`, {
+                    comment: newComment,
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+
+                setNewComment('') // Clear the input after submission
+                setShouldFetchComments(true) // Indicate that comments should be fetched
+            } catch (error) {
+                console.error('Error submitting comment:', error)
+                // Handle error (e.g., show a notification)
+            }
+        }
+    }
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -32,6 +73,19 @@ function Project() {
 
                 setProject(response.data);
                 console.log(response.data)
+                console.log("Fetching Comment now...")
+
+                // Fetch initial comments
+                const commentsResponse = await axios.get(`http://localhost:8000/get_project_comments/${id}/`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                });
+
+                console.log("Comments : ", commentsResponse.data)
+                setComments(commentsResponse.data);
             } catch (error) {
                 console.error('Error fetching project:', error);
                 if (error.response && error.response.status === 401) {
@@ -69,6 +123,35 @@ function Project() {
         fetchProjects()
     }, [navigate, id])
 
+    // Fetch comments only when a new comment is added
+    useEffect(() => {
+        if (!project || !shouldFetchComments) return; // Don't fetch if no project or no need to fetch comments
+
+        const fetchComments = async () => {
+            try {
+                const accessToken = localStorage.getItem('accessToken');
+                const csrfToken = Cookies.get('csrftoken');
+
+                const response = await axios.get(`http://localhost:8000/get_project_comments/${project.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    withCredentials: true
+                });
+
+                setComments(response.data);
+            } catch (error) {
+                console.error('Error fetching comments:', error);
+            } finally {
+                setShouldFetchComments(false); // Reset the flag after fetching
+            }
+        };
+
+        fetchComments();
+    }, [project?.id, shouldFetchComments, navigate]);
+
     if (loading) {
         return (
             <div style={styles.loadingContainer}>
@@ -99,7 +182,7 @@ function Project() {
                         ))}
                     </div><br />
                     <div>
-                        <button style={styles.addButton} onClick={() => {navigate('/project_management',{state : {project} })}}>Management</button>
+                        <button style={styles.addButton} onClick={() => { navigate('/project_management', { state: { project } }) }}>Management</button>
                     </div>
                 </div>
                 <div style={styles.statusBadge}>
@@ -132,9 +215,16 @@ function Project() {
                     </section>
 
                     <section style={styles.section}>
+                        <h2 style={styles.sectionTitle}>Project Gantt Chart</h2>
+                        <div style={{ width: '100%', height: '400px' }}>
+                            <ProjectGantt projectId={project.id} />
+                        </div>
+                    </section>
+                    <section></section>
+                    <section style={styles.section}>
                         <div style={styles.sectionHeader}>
                             <h2 style={styles.sectionTitle}>Issues</h2>
-                            <button style={styles.addButton} onClick={()=>{navigate("/new_issue",{state:{project}})}} >+ New Issue</button>
+                            <button style={styles.addButton} onClick={() => { navigate("/new_issue", { state: { project } }) }} >+ New Issue</button>
                         </div>
                         <div style={styles.cardGrid}>
                             {project.issues?.map((issue, index) => (
@@ -157,7 +247,7 @@ function Project() {
                     <section style={styles.section}>
                         <div style={styles.sectionHeader}>
                             <h2 style={styles.sectionTitle}>Requirements</h2>
-                            <button style={styles.addButton} onClick={()=>{navigate("/new_requirement",{state:{project}})}} >+ Add Requirement</button>
+                            <button style={styles.addButton} onClick={() => { navigate("/new_requirement", { state: { project } }) }} >+ Add Requirement</button>
                         </div>
                         <div style={styles.cardGrid}>
                             {project.requirements?.map((req, index) => (
@@ -180,11 +270,11 @@ function Project() {
                     <section style={styles.section}>
                         <div style={styles.sectionHeader}>
                             <h2 style={styles.sectionTitle}>Change Requests</h2>
-                            <button style={styles.addButton} onClick={()=>{navigate("/new_change_request",{state:{project}})}}>+ New Request</button>
+                            <button style={styles.addButton} onClick={() => { navigate("/new_change_request", { state: { project } }) }}>+ New Request</button>
                         </div>
                         <div style={styles.cardGrid}>
                             {project.change_requests?.map((request, index) => (
-                                <div key={index} style={styles.card} onClick={()=>{navigate(`/change_request/${request.id}`)}} >
+                                <div key={index} style={styles.card} onClick={() => { navigate(`/change_request/${request.id}`) }} >
                                     <h3 style={styles.cardTitle}>{request.request}</h3>
                                     <p style={styles.cardDescription}>{request.description}</p>
                                     <div style={styles.cardFooter}>
@@ -199,11 +289,51 @@ function Project() {
                             ))}
                         </div>
                     </section>
+
+                    {/* Comments Section */}
+                    <section style={styles.section}>
+                        <div style={styles.sectionHeader}>
+                            <h2 style={styles.sectionTitle}>Comments</h2>
+                        </div>
+
+                        <form onSubmit={handleCommentSubmit} style={styles.commentForm}>
+                            <textarea
+                                value={newComment}
+                                onChange={handleCommentChange}
+                                style={styles.commentInput}
+                                placeholder="Add a comment..."
+                                rows="3"
+                            />
+                            <button
+                                type="submit"
+                                style={styles.submitButton}
+                                disabled={!newComment.trim()}
+                            >
+                                Post Comment
+                            </button>
+                        </form>
+
+                        <div style={styles.commentsList}>
+                            {comments
+                                .sort((a, b) => new Date(b.date_created) - new Date(a.date_created)) // Sort by date, newest first
+                                .map((comment, index) => (
+                                    <div key={index} style={styles.commentItem}>
+                                        <div style={styles.commentHeader}>
+                                            <span style={styles.commentAuthor}>{comment.user.username}</span>
+                                            <span style={styles.commentDate}>
+                                                {new Date(comment.date_created).toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <p style={styles.commentText}>{comment.comment}</p>
+                                    </div>
+                                ))}
+                        </div>                    </section>
                 </div>
             </div>
         </div>
     )
 }
+
 
 const styles = {
     container: {
@@ -373,6 +503,70 @@ const styles = {
     errorContainer: {
         textAlign: 'center',
         padding: '48px',
+    },
+    button: {
+        backgroundColor: '#4299e1',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        padding: '8px 16px',
+        fontSize: '14px',
+        fontWeight: '500',
+        cursor: 'pointer',
+    },
+    // Comment section styles
+    commentForm: {
+        marginBottom: '24px',
+    },
+    commentInput: {
+        width: '100%',
+        padding: '12px',
+        borderRadius: '6px',
+        border: '1px solid #e2e8f0',
+        marginBottom: '12px',
+        fontSize: '14px',
+        resize: 'vertical',
+    },
+    submitButton: {
+        backgroundColor: '#4299e1',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        padding: '8px 16px',
+        fontSize: '14px',
+        fontWeight: '500',
+        cursor: 'pointer',
+        transition: 'background-color 0.2s',
+    },
+    commentsList: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+    },
+    commentItem: {
+        padding: '16px',
+        backgroundColor: '#f7fafc',
+        borderRadius: '8px',
+    },
+    commentHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        marginBottom: '8px',
+    },
+    commentAuthor: {
+        fontSize: '14px',
+        fontWeight: '600',
+        color: '#2d3748',
+    },
+    commentDate: {
+        fontSize: '12px',
+        color: '#718096',
+    },
+    commentText: {
+        fontSize: '14px',
+        color: '#4a5568',
+        margin: 0,
+        lineHeight: '1.5',
     },
 }
 

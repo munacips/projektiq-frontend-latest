@@ -3,6 +3,7 @@ import { FaClock, FaHome, FaTachometerAlt, FaToolbox, FaTimesCircle, FaScroll } 
 import { FaCheck } from 'react-icons/fa'
 import { FaGear, FaMessage } from 'react-icons/fa6'
 import SideBarItem from './SideBarItem'
+import { colors } from '@mui/material'
 
 function SideBar() {
   return (
@@ -24,7 +25,7 @@ function SideBar() {
 const styling = {
     display: 'block',
     flexDirection : 'column',
-    backgroundColor : 'rgb(0, 145, 190)',
+    backgroundColor : '#007bff',
     height: '100vw',
     width: 'fit-content',
     listStyleType: 'none',

@@ -7,6 +7,7 @@ function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const tokenUrl = "http://localhost:8000/o/token/";
@@ -49,6 +50,7 @@ function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
         try {
             const response = await axios.post(tokenUrl, data, {
                 headers: {
@@ -82,6 +84,7 @@ function Login() {
                 // Something else caused the error
                 setErrorMessage(`Error: ${error.message}`);
             }
+            setIsLoading(false);
         }
     };
 
@@ -116,8 +119,15 @@ function Login() {
                         />
                     </div>
 
-                    <button type="submit" style={styles.button}>
-                        Sign In
+                    <button type="submit" style={styles.button} disabled={isLoading}>
+                        {isLoading ? (
+                            <div style={styles.loadingContainer}>
+                                <div style={styles.spinner}></div>
+                                <span>Signing in...</span>
+                            </div>
+                        ) : (
+                            "Sign In"
+                        )}
                     </button>
                 </form>
             </div>
@@ -181,6 +191,7 @@ const styles = {
         fontWeight: '500',
         cursor: 'pointer',
         transition: 'background-color 0.2s',
+        opacity: props => props.disabled ? 0.7 : 1,
     },
     error: {
         backgroundColor: '#fff3f3',
@@ -189,6 +200,24 @@ const styles = {
         borderRadius: '8px',
         marginBottom: '20px',
         textAlign: 'center',
+    },
+    loadingContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+    },
+    spinner: {
+        width: '16px',
+        height: '16px',
+        border: '3px solid rgba(255, 255, 255, 0.3)',
+        borderRadius: '50%',
+        borderTopColor: 'white',
+        animation: 'spin 1s ease-in-out infinite',
+        display: 'inline-block',
+    },
+    '@keyframes spin': {
+        to: { transform: 'rotate(360deg)' }
     }
 };
 

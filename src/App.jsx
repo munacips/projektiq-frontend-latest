@@ -26,6 +26,9 @@ import ManageProjectMembers from './pages/ManageProjectMembers';
 import RequirementPage from './pages/RequirementPage';
 import NewRequirement from './pages/NewRequirement';
 import Timelogs from './pages/Timelogs';
+import NewTask from './pages/NewTask';
+import ProjectLogs from './pages/ProjectLogs';
+import ManageMember from './pages/ManageMember';
 
 function App() {
   return (
@@ -59,6 +62,9 @@ function App() {
                 <Route exact path="/requirement/:id" element={<RequirementPage />} />
                 <Route exact path="/new_requirement" element={<NewRequirement />} />
                 <Route exact path="/timelogs" element={<Timelogs/>} />
+                <Route exact path="/new_task" element={<NewTask />} />
+                <Route exact path="/project_logs" element={<ProjectLogs/>}/>
+                <Route exact path="/manage_member/:id" element={<ManageMember />} />
               </Routes>
             </div>
           </div>

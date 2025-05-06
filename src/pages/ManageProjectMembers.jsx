@@ -122,6 +122,7 @@ function ManageProjectMembers() {
               <TableCell>Role</TableCell>
               <TableCell>Date Joined</TableCell>
               <TableCell>Actions</TableCell>
+              <TableCell>Management</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -153,6 +154,17 @@ function ManageProjectMembers() {
                     disabled={member.role === 'Project Manager'}
                   >
                     Remove
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    onClick={() => navigate(`/manage_member/${member.account_id}`, { state: { project, member } })}
+                    disabled={member.role === 'Project Manager'}
+                  >
+                    Manage
                   </Button>
                 </TableCell>
               </TableRow>

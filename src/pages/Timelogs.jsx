@@ -9,23 +9,21 @@ function Timelogs() {
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
 
- 
-  const [newLog, setNewLog] = useState({ 
-    description: '', 
-    start_time: '', 
-    end_time: '', 
-    project: '', 
-    task: '', 
-    billable: false 
+  const [newLog, setNewLog] = useState({
+    description: '',
+    start_time: '',
+    end_time: '',
+    project: '',
+    task: '',
+    billable: false
   })
 
-  // Fetch user's projects
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const accessToken = localStorage.getItem('accessToken')
         const csrfToken = Cookies.get('csrftoken')
-        
+
         const response = await axios.get('http://localhost:8000/my_projects/', {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -58,17 +56,13 @@ function Timelogs() {
       try {
         const accessToken = localStorage.getItem('accessToken')
         const csrfToken = Cookies.get('csrftoken')
-        const accountId = 1  // Get this from your auth context or user state
-        const organizationId = 1  // Get this from your current organization context
-        const projectId = 1  // Get this from your current project context
+        const accountId = localStorage.getItem('userId') || ''
+        const organizationId = localStorage.getItem('organizationId') || ''
 
         let endpoint = ''
-        switch(viewType) {
+        switch (viewType) {
           case 'organization':
             endpoint = `http://localhost:8000/get_organization_timelogs/${organizationId}/`
-            break
-          case 'project':
-            endpoint = `http://localhost:8000/get_project_timelogs/${projectId}/`
             break
           default:
             endpoint = `http://localhost:8000/get_account_timelogs/${accountId}/`
@@ -101,12 +95,33 @@ function Timelogs() {
   }
 
   const handleAddEntry = async () => {
+    // Validate time entry
+    if (!newLog.start_time || !newLog.end_time) {
+      alert('Please select both start and end times');
+      return;
+    }
+    
+    const startTime = new Date(newLog.start_time);
+    const endTime = new Date(newLog.end_time);
+    
+    if (endTime <= startTime) {
+      alert('End time must be after start time');
+      return;
+    }
+    
+    // Calculate duration in minutes
+    const durationMinutes = (endTime - startTime) / (1000 * 60);
+    
+    if (durationMinutes <= 0) {
+      alert('Time entry must be greater than 0 minutes');
+      return;
+    }
+    
     try {
       const accessToken = localStorage.getItem('accessToken')
       const csrfToken = Cookies.get('csrftoken')
-      const accountId = 1  // Get this from your auth context or user state
-      const organizationId = 1  // Get this from your current organization context
-      const projectContextId = 1  // Get this from your current project context
+      const accountId = localStorage.getItem('userId') || ''
+      const organizationId = localStorage.getItem('organizationId') || ''
 
       let endpoint = `http://localhost:8000/timelogs/`
 
@@ -118,10 +133,9 @@ function Timelogs() {
         }
       })
 
-      // Reset the form after a successful entry
       setNewLog({ description: '', start_time: '', end_time: '', project: '', task: '', billable: false })
       alert('Time entry added successfully')
-      setViewType(viewType) // Refresh logs
+      setViewType(viewType)
     } catch (error) {
       console.error('Error adding time entry:', error)
       alert('Failed to add time entry')
@@ -151,15 +165,6 @@ function Timelogs() {
         <button
           style={{
             ...styles.button,
-            backgroundColor: viewType === 'project' ? '#3182ce' : '#4299e1'
-          }}
-          onClick={() => setViewType('project')}
-        >
-          View Project Logs
-        </button>
-        <button
-          style={{
-            ...styles.button,
             backgroundColor: viewType === 'account' ? '#3182ce' : '#4299e1'
           }}
           onClick={() => setViewType('account')}
@@ -185,6 +190,7 @@ function Timelogs() {
           value={newLog.start_time}
           onChange={handleInputChange}
           style={styles.input}
+          required
         />
         <input
           type="datetime-local"
@@ -193,9 +199,15 @@ function Timelogs() {
           value={newLog.end_time}
           onChange={handleInputChange}
           style={styles.input}
+          required
         />
-        
-        {/* Project dropdown */}
+        {newLog.start_time && newLog.end_time && 
+          new Date(newLog.end_time) <= new Date(newLog.start_time) && (
+          <div style={styles.errorMessage}>
+            End time must be after start time
+          </div>
+        )}
+
         <select
           name="project"
           value={newLog.project}
@@ -209,8 +221,7 @@ function Timelogs() {
             </option>
           ))}
         </select>
-        
-        {/* New input for Task ID */}
+
         <select
           type="text"
           name="task"
@@ -220,13 +231,16 @@ function Timelogs() {
           style={styles.input}
         >
           <option value="">Select a Task</option>
-          {tasks.map((task) => (
-            <option key={task.id} value={task.id}>
-              {task.task}
-            </option>
-          ))}
+          {tasks
+            .filter(task => {
+              return !newLog.project || parseInt(newLog.project) === parseInt(task.project);
+            })
+            .map((task) => (
+              <option key={task.id} value={task.id}>
+                {task.task}
+              </option>
+            ))}
         </select>
-        {/* Checkbox for Billable */}
         <label style={styles.checkboxLabel}>
           <input
             type="checkbox"
@@ -241,7 +255,7 @@ function Timelogs() {
 
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>
-          {viewType === 'organization' ? 'Organization Logs' : viewType === 'project' ? 'Project Logs' : 'My Logs'}
+          {viewType === 'organization' ? 'Organization Logs' : 'My Logs'}
         </h2>
 
         <div style={styles.cardGrid}>
@@ -292,7 +306,13 @@ const styles = {
   extraInfo: { fontSize: '14px', marginTop: '8px' },
   loadingContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' },
   loader: { border: '4px solid #f3f3f3', borderTop: '4px solid #3498db', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' },
-  projectBadge: { backgroundColor: '#ebf8ff', color: '#2b6cb0', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }
+  projectBadge: { backgroundColor: '#ebf8ff', color: '#2b6cb0', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' },
+  errorMessage: { 
+    color: '#e53e3e', 
+    fontSize: '14px', 
+    marginTop: '4px', 
+    marginBottom: '8px' 
+  }
 }
 
 export default Timelogs
