@@ -135,7 +135,7 @@ function ManageProjectMembers() {
                     onChange={(e) => handleRoleChange(member.account_id, e.target.value)}
                     disabled={member.role === 'Project Manager' || member.role === 'General Manager'}
                   >
-                    <MenuItem value="Project Manager">Project Manager</MenuItem>
+                    <MenuItem value="General Manager">General Manager</MenuItem>
                     <MenuItem value="Admin">Admin</MenuItem>
                     <MenuItem value="Developer">Developer</MenuItem>
                     <MenuItem value="Tester">Tester</MenuItem>

@@ -29,6 +29,8 @@ import Timelogs from './pages/Timelogs';
 import NewTask from './pages/NewTask';
 import ProjectLogs from './pages/ProjectLogs';
 import ManageMember from './pages/ManageMember';
+import ProjectProtectedRoute from './components/ProjectProtectedRoute';
+import AccessDenied from './pages/AccessDenied';
 
 function App() {
   return (
@@ -40,11 +42,15 @@ function App() {
             <div style={styles.mainContent}>
               <Routes>
                 <Route exact path='/' element={<HomePage />}></Route>
-                <Route exact path='/project_management' element={<ProjectManagePage />}></Route>
+                <Route exact path='/project_management' element={
+                  <ProjectProtectedRoute allowedRoles={['Admin', 'General Manager']}>
+                    <ProjectManagePage />
+                  </ProjectProtectedRoute>
+                }></Route>
                 <Route exact path='/login' element={<Login />}></Route>
                 <Route exact path="/project/:id" element={<Project />} />
                 <Route exact path="/issue/:id" element={<IssuePage />} />
-                <Route exah path='/change_request/:id' element={<ChangeRequest />} />
+                <Route exact path='/change_request/:id' element={<ChangeRequest />} />
                 <Route exact path="/issues" element={<Issues />} />
                 <Route exact path="/schedule" element={<Schedule />} />
                 <Route exact path="/projects" element={<Projects />} />
@@ -56,15 +62,28 @@ function App() {
                 <Route exact path="/new_issue" element={<NewIssue />} />
                 <Route exact path="/new_change_request" element={<NewChangeRequest />} />
                 <Route exact path="/new_member" element={<NewMember />} />
-                <Route exact path="/manage_members" element={<ManageOrganizationMembers />} />
+                <Route exact path="/manage_members" element={
+                  <ProjectProtectedRoute allowedRoles={['Admin', 'General Manager']}>
+                    <ManageOrganizationMembers />
+                  </ProjectProtectedRoute>
+                } />
                 <Route exach path="/new_project_member" element={<NewProjectMember />} />
-                <Route exact path="/manage_project_members" element={<ManageProjectMembers />} />
+                <Route exact path="/manage_project_members" element={
+                  <ProjectProtectedRoute allowedRoles={['Admin', 'General Manager']}>
+                    <ManageProjectMembers />
+                  </ProjectProtectedRoute>
+                } />
                 <Route exact path="/requirement/:id" element={<RequirementPage />} />
                 <Route exact path="/new_requirement" element={<NewRequirement />} />
-                <Route exact path="/timelogs" element={<Timelogs/>} />
+                <Route exact path="/timelogs" element={<Timelogs />} />
                 <Route exact path="/new_task" element={<NewTask />} />
-                <Route exact path="/project_logs" element={<ProjectLogs/>}/>
-                <Route exact path="/manage_member/:id" element={<ManageMember />} />
+                <Route exact path="/project_logs" element={<ProjectLogs />} />
+                <Route exact path="/manage_member/:id" element={
+                  <ProjectProtectedRoute allowedRoles={['Admin', 'General Manager']}>
+                    <ManageMember />
+                  </ProjectProtectedRoute>
+                } />
+                <Route exact path="/unauthorized" element={<AccessDenied />} />
               </Routes>
             </div>
           </div>
