@@ -31,6 +31,7 @@ import ProjectLogs from './pages/ProjectLogs';
 import ManageMember from './pages/ManageMember';
 import ProjectProtectedRoute from './components/ProjectProtectedRoute';
 import AccessDenied from './pages/AccessDenied';
+import OrganizationProtectedRoute from './components/OrganizationProtectedRoute';
 
 function App() {
   return (
@@ -57,15 +58,23 @@ function App() {
                 <Route exact path="/organization" element={<Organization />} />
                 <Route exact path="/tasks" element={<Tasks />} />
                 <Route exact path="/chat" element={<Chat />} />
-                <Route exact path="/new_project" element={<NewProject />} />
+                <Route exact path="/new_project" element={
+                  <OrganizationProtectedRoute allowedRoles={['Admin', 'General Manager']}>
+                    <NewProject />
+                  </OrganizationProtectedRoute>
+                } />
                 <Route exact path="/task" element={<Task />} />
                 <Route exact path="/new_issue" element={<NewIssue />} />
                 <Route exact path="/new_change_request" element={<NewChangeRequest />} />
-                <Route exact path="/new_member" element={<NewMember />} />
+                <Route exact path="/new_member" element={
+                  <OrganizationProtectedRoute allowedRoles={['Admin', 'General Manager']}>
+                    <NewMember />
+                  </OrganizationProtectedRoute>
+                } />
                 <Route exact path="/manage_members" element={
-                  <ProjectProtectedRoute allowedRoles={['Admin', 'General Manager']}>
+                  <OrganizationProtectedRoute allowedRoles={['Admin', 'General Manager']}>
                     <ManageOrganizationMembers />
-                  </ProjectProtectedRoute>
+                  </OrganizationProtectedRoute>
                 } />
                 <Route exach path="/new_project_member" element={<NewProjectMember />} />
                 <Route exact path="/manage_project_members" element={
@@ -101,7 +110,7 @@ const styles = {
   },
   mainContent: {
     flexGrow: 1,
-    marginLeft: '60px', // Adjust this value to match the width of your SideBar
+    marginLeft: '60px',
     overflowY: 'auto',
   },
 };

@@ -358,6 +358,7 @@ function Project() {
                 )}
             </section>
 
+
             {/* ... other sections ... */}
              <section style={styles.section}>
                 <div style={styles.sectionHeader}>
