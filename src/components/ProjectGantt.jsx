@@ -2,27 +2,25 @@ import React, { useState, useEffect, useMemo } from "react";
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-// Color mapping for categories
+
 const categoryColors = {
-  "Requirements": "#ff4136", // Red
-  "Design": "#2ecc40",       // Green
-  "Development": "#0074d9",  // Blue
-  "Testing": "#ff851b",      // Orange
-  "Deployment": "#b10dc9",   // Purple
-  "Maintenance": "#39cccc",  // Teal
-  "Closed": "#7fdbff",       // Light blue
-  "Cancelled": "#85144b",    // Maroon
-  "Other": "#aaaaaa",        // Gray
-  "Implementation": "#f012be" // Pink
+  "Requirements": "#ff4136",
+  "Design": "#2ecc40",
+  "Development": "#0074d9",
+  "Testing": "#ff851b",
+  "Deployment": "#b10dc9",
+  "Maintenance": "#39cccc",
+  "Closed": "#7fdbff",
+  "Cancelled": "#85144b",
+  "Other": "#aaaaaa",
+  "Implementation": "#f012be"
 };
 
 
-// 1. Accept refreshTrigger as a prop
 export default function ProjectGantt({ projectId, refreshTrigger }) {
   const [tasks, setTasks] = useState([]);
-  const [viewMode, setViewMode] = useState("month"); // "month" or "week"
-  // Set initial currentDate to today for a more dynamic start
-  const [currentDate, setCurrentDate] = useState(new Date()); // Changed from fixed date
+  const [viewMode, setViewMode] = useState("month");
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -32,23 +30,15 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!projectId) { // Ensure projectId is available
-        setTasks([]); // Clear tasks if no projectId
+      if (!projectId) {
+        setTasks([]);
         return;
       }
       try {
         setLoading(true);
-        setError(null); // Clear previous errors
+        setError(null);
         const accessToken = localStorage.getItem('accessToken');
         const csrfToken = Cookies.get('csrftoken');
-
-        // Ensure tokens are present
-        if (!accessToken || !csrfToken) {
-            setError("Authentication details are missing. Please log in again.");
-            setLoading(false);
-            setTasks([]); // Clear tasks if auth fails
-            return;
-        }
 
         const response = await axios.get(`http://localhost:8000/project_history/${projectId}/`, {
           headers: {
@@ -62,66 +52,59 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
           if (response.data.length > 0) {
             const formatted = response.data.map((item, index) => {
               const startDate = new Date(item.date_created);
-              // If date_ended is null or invalid, consider it ongoing till today or use start date
               const endDate = item.date_ended ? new Date(item.date_ended) : new Date(Math.max(startDate.getTime(), new Date().getTime()));
-              if (endDate < startDate) { // Ensure end date is not before start date
-                endDate.setTime(startDate.getTime()); // Set to start date if invalid
+              if (endDate < startDate) {
+                endDate.setTime(startDate.getTime());
               }
 
 
               return {
-                id: item.id || `task-${index}`, // Prefer actual ID from backend if available
-                name: item.description || item.status || `Phase ${index + 1}`, // Use description if available
-                startDate,
-                endDate,
-                progress: 100, // This could be dynamic based on current date vs end_date
-                category: item.status || "Other", // Default category if status is missing
-                // Dependency logic might need to be more sophisticated based on actual project data
-                // dependency: index > 0 ? (response.data[index-1].id || `task-${index - 1}`) : "",
+                id: item.id || `task-${index}`,
+                name: item.description || item.status || `Phase ${index + 1}`,
               };
             });
             console.log("Fetched and formatted tasks:", formatted);
             setTasks(formatted);
           } else {
-            setTasks([]); // Set to empty array if API returns empty
+            setTasks([]);
             console.log("No project history data received from API.");
           }
         } else {
           console.warn("Unexpected data format received from API:", response.data);
-          setTasks([]); // Set to empty if format is wrong
+          setTasks([]);
           setError("Failed to load project timeline due to unexpected data format.");
         }
       } catch (error) {
         console.error("Error fetching project history:", error);
         if (error.response) {
-            console.error("Error details:", error.response.data);
-             setError(`Failed to load project timeline (Status: ${error.response.status}). Please try again later.`);
+          console.error("Error details:", error.response.data);
+          setError(`Failed to load project timeline (Status: ${error.response.status}). Please try again later.`);
         } else if (error.request) {
-            setError("Failed to load project timeline. No response from server.");
+          setError("Failed to load project timeline. No response from server.");
         } else {
-            setError("Failed to load project timeline. An unexpected error occurred.");
+          setError("Failed to load project timeline. An unexpected error occurred.");
         }
-        setTasks([]); // Clear tasks on error
+        setTasks([]);
       } finally {
-        setLoading(false); // Ensure loading is set to false in all cases
+        setLoading(false);
       }
     };
 
     if (projectId) {
       fetchData();
     } else {
-      setTasks([]); // Clear tasks if projectId becomes null/undefined
+      setTasks([]);
       setLoading(false);
     }
-  // 2. Add refreshTrigger to the dependency array
+
   }, [projectId, refreshTrigger]);
 
-  // Navigation functions
+
   const goToPrevious = () => {
     const newDate = new Date(currentDate);
     if (viewMode === "month") {
       newDate.setMonth(newDate.getMonth() - 1);
-    } else { // week view
+    } else {
       newDate.setDate(newDate.getDate() - 7);
     }
     setCurrentDate(newDate);
@@ -131,13 +114,13 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
     const newDate = new Date(currentDate);
     if (viewMode === "month") {
       newDate.setMonth(newDate.getMonth() + 1);
-    } else { // week view
+    } else {
       newDate.setDate(newDate.getDate() + 7);
     }
     setCurrentDate(newDate);
   };
 
-  // Calculate calendar dates
+
   const getCalendarDates = () => {
     const dates = [];
     const year = currentDate.getFullYear();
@@ -146,43 +129,35 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
     if (viewMode === "month") {
       const firstDayOfMonth = new Date(year, month, 1);
       const lastDayOfMonth = new Date(year, month + 1, 0);
-      const firstDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday, etc.
+      const firstDayOfWeek = firstDayOfMonth.getDay();
 
-      // Days from previous month
+
       for (let i = 0; i < firstDayOfWeek; i++) {
         const day = new Date(year, month, 0 - (firstDayOfWeek - 1 - i));
         dates.push({ date: day, isCurrentMonth: false });
       }
 
-      // Days of current month
+
       for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
         const day = new Date(year, month, i);
         dates.push({ date: day, isCurrentMonth: true });
       }
 
-      // Days from next month to fill up to 6 weeks (42 days)
+
       const daysDisplayed = dates.length;
       const daysToAddFromNextMonth = (daysDisplayed % 7 === 0) ? 0 : 7 - (daysDisplayed % 7);
-      
-      // Ensure we always display 6 weeks for consistent height if needed, or just complete the last week.
-      // For a strict 6-week (42 days) display:
-      // const totalCells = 42;
-      // for (let i = 1; dates.length < totalCells; i++) {
-      //    const day = new Date(year, month + 1, i);
-      //    dates.push({ date: day, isCurrentMonth: false });
-      // }
-      // Or to just complete the current grid:
-       for (let i = 1; i <= daysToAddFromNextMonth; i++) {
-         const day = new Date(year, month + 1, i);
-         dates.push({ date: day, isCurrentMonth: false });
-       }
+
+      for (let i = 1; i <= daysToAddFromNextMonth; i++) {
+        const day = new Date(year, month + 1, i);
+        dates.push({ date: day, isCurrentMonth: false });
+      }
 
 
-    } else { // Week view
+    } else {
       let currentDayIterator = new Date(currentDate);
       let dayOfWeek = currentDayIterator.getDay();
       let diffToSunday = currentDayIterator.getDate() - dayOfWeek;
-      
+
       const startOfWeek = new Date(currentDayIterator.setDate(diffToSunday));
 
       for (let i = 0; i < 7; i++) {
@@ -198,7 +173,7 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
 
   const getCalendarWeeks = () => {
     const weeks = [];
-    if (calendarDates.length === 0) return weeks; // Handle empty calendarDates
+    if (calendarDates.length === 0) return weeks;
     for (let i = 0; i < calendarDates.length; i += 7) {
       weeks.push(calendarDates.slice(i, i + 7));
     }
@@ -216,11 +191,11 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
 
     return tasks.filter(task => {
       const taskStart = new Date(task.startDate);
-      taskStart.setHours(0,0,0,0); // Normalize task start date
+      taskStart.setHours(0, 0, 0, 0);
       const taskEnd = new Date(task.endDate);
-      taskEnd.setHours(23,59,59,999); // Normalize task end date
-      
-      // Check if the task's period overlaps with the target date
+      taskEnd.setHours(23, 59, 59, 999);
+
+
       return taskStart <= targetDateEnd && taskEnd >= targetDateStart;
     });
   };
@@ -246,8 +221,8 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
 
     return `${startString} - ${endString}`;
   };
-  
-  if (loading) { // More prominent loading state for the whole component
+
+  if (loading) {
     return <div style={{ ...styles.container, ...styles.loadingOverlay, position: 'relative', minHeight: '300px' }}>Loading Project Timeline...</div>;
   }
 
@@ -256,7 +231,7 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
     <div style={styles.container}>
       {/* {loading && <div style={styles.loadingOverlay}>Loading...</div>} */} {/* Can be removed if top-level loading is preferred */}
       {error && <div style={{ color: 'red', marginBottom: '1rem', padding: '1rem', border: '1px solid red', borderRadius: '0.25rem' }}>{error}</div>}
-      
+
       <div style={styles.header}>
         <h2 style={styles.title}>
           {viewMode === "month" ? formatMonthYear(currentDate) : formatWeekRange(calendarDates)}
@@ -324,7 +299,7 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
           {calendarWeeks.map((week, weekIndex) => (
             <div key={`week-${weekIndex}`} style={styles.week}>
               {week.map((day, dayIndex) => {
-                const dateKey = day.date.toISOString().split('T')[0]; // Use date part as key
+                const dateKey = day.date.toISOString().split('T')[0];
                 const tasksForDate = getTasksForDate(day.date);
                 const isCurrentDay = isToday(day.date);
 
@@ -336,7 +311,7 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
 
                 return (
                   <div key={dateKey} style={dayStyle}>
-                    <div 
+                    <div
                       style={{
                         ...styles.dayNumber,
                         ...(day.isCurrentMonth ? styles.dayInMonth : styles.dayOutOfMonth)
@@ -345,14 +320,14 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
                       {day.date.getDate()}
                     </div>
                     <div style={styles.taskIndicators}>
-                      {tasksForDate.slice(0, viewMode === "month" ? 3 : 5).map((task) => { // Show more in week view
+                      {tasksForDate.slice(0, viewMode === "month" ? 3 : 5).map((task) => {
                         const taskStart = new Date(task.startDate);
-                        taskStart.setHours(0,0,0,0);
+                        taskStart.setHours(0, 0, 0, 0);
                         const taskEnd = new Date(task.endDate);
-                        taskEnd.setHours(0,0,0,0); // Use 00:00:00 for end date comparison for "isTaskEnd"
+                        taskEnd.setHours(0, 0, 0, 0);
 
                         const currentDayStart = new Date(day.date);
-                        currentDayStart.setHours(0,0,0,0);
+                        currentDayStart.setHours(0, 0, 0, 0);
 
                         const isTaskStart = taskStart.getTime() === currentDayStart.getTime();
                         const isTaskEnd = taskEnd.getTime() === currentDayStart.getTime();
@@ -370,7 +345,7 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
                         } else if (isTaskEnd) {
                           taskBarStyle = { ...taskBarStyle, ...styles.taskBarRoundedRight };
                         }
-                        // else: it's a middle segment, no extra rounding needed
+
 
                         return (
                           <div
@@ -394,7 +369,7 @@ export default function ProjectGantt({ projectId, refreshTrigger }) {
     </div>
   );
 }
-// Keep your styles object as is
+
 const styles = {
   container: {
     width: '100%',
@@ -419,33 +394,33 @@ const styles = {
   },
   viewToggle: {
     display: 'flex',
-    // gap: '0.5rem', // Removed to make buttons touch for segmented control look
-    background: '#e5e7eb', // Light gray background for the toggle group
+
+    background: '#e5e7eb',
     borderRadius: '0.5rem',
     padding: '0.25rem',
-    border: '1px solid #d1d5db' // Softer border
+    border: '1px solid #d1d5db'
   },
   viewButton: {
-    padding: '0.35rem 0.85rem', // Slightly more padding
-    borderRadius: '0.35rem',    // Slightly more rounded inner buttons
+    padding: '0.35rem 0.85rem',
+    borderRadius: '0.35rem',
     border: 'none',
     background: 'transparent',
     cursor: 'pointer',
-    color: '#374151', // Darker text for inactive buttons
+    color: '#374151',
     fontWeight: '500',
-    transition: 'background-color 0.2s, color 0.2s' // Smooth transition
+    transition: 'background-color 0.2s, color 0.2s'
   },
   activeViewButton: {
     background: 'white',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)', // Refined shadow
-    color: '#1f2937', // Darker text for active button
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+    color: '#1f2937',
     fontWeight: '600',
   },
   navButton: {
-    padding: '0.35rem 0.6rem', // Adjusted padding
+    padding: '0.35rem 0.6rem',
     borderRadius: '0.35rem',
-    border: '1px solid #d1d5db', // Consistent border
-    background: 'white',       // White background
+    border: '1px solid #d1d5db',
+    background: 'white',
     cursor: 'pointer',
     color: '#374151',
     fontWeight: 'bold',
@@ -454,36 +429,36 @@ const styles = {
   legend: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '1rem', // Reduced gap for denser legend
-    marginBottom: '1.5rem', // More space below legend
+    gap: '1rem',
+    marginBottom: '1.5rem',
     padding: '0.5rem 0'
   },
   legendItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.35rem' // Smaller gap
+    gap: '0.35rem'
   },
   legendColor: {
-    width: '0.875rem', // 14px
+    width: '0.875rem',
     height: '0.875rem',
-    borderRadius: '0.125rem' // 2px
+    borderRadius: '0.125rem'
   },
   calendar: {
     background: '#1f2937',
     borderRadius: '0.5rem',
     overflow: 'hidden',
-    border: '1px solid #e5e7eb', // Light border for the calendar
-    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)' // Softer shadow
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)'
   },
   daysHeader: {
     display: 'grid',
     gridTemplateColumns: 'repeat(7, 1fr)',
     textAlign: 'center',
-    padding: '0.75rem 0', // More padding
+    padding: '0.75rem 0',
     borderBottom: '1px solid #e5e7eb',
-    color: '#6b7280', // Gray for day names
-    fontWeight: '600', // Bolder day names
-    background: '#f9fafb' // Very light gray for header background
+    color: '#6b7280',
+    fontWeight: '600',
+    background: '#f9fafb'
   },
   calendarGrid: {
     display: 'flex',
@@ -492,57 +467,57 @@ const styles = {
   week: {
     display: 'grid',
     gridTemplateColumns: 'repeat(7, 1fr)',
-    borderBottom: '1px solid #e5e7eb', // Separator between weeks
-    '&:last-child': { // This pseudo-selector won't work in inline styles
-        borderBottom: 'none', // No border for the last week
+    borderBottom: '1px solid #e5e7eb',
+    '&:last-child': {
+      borderBottom: 'none',
     }
   },
   day: {
-    minHeight: '6rem', // Minimum height for day cells
-    padding: '0.5rem', // More padding
-    borderTop: 'none', // Remove individual top borders, use week's borderBottom
+    minHeight: '6rem',
+    padding: '0.5rem',
+    borderTop: 'none',
     position: 'relative',
-    color: '#1f2937' // Default text color for days
+    color: '#1f2937'
   },
   dayBorderRight: {
-    borderRight: '1px solid #e5e7eb' // Vertical separator for days
+    borderRight: '1px solid #e5e7eb'
   },
   dayNumber: {
     fontWeight: '500',
     marginBottom: '0.35rem',
-    textAlign: 'left', // Align day number to the left
-    fontSize: '0.875rem' // 14px
+    textAlign: 'left',
+    fontSize: '0.875rem'
   },
   dayInMonth: {
-    color: '#1f2937' // Dark text for days in current month
+    color: '#1f2937'
   },
   dayOutOfMonth: {
-    color: '#9ca3af' // Lighter gray for days not in current month
+    color: '#9ca3af'
   },
   today: {
-    background: '#eff6ff', // Very light blue for today
-    '& > div:first-child': { // Target .dayNumber within .today, needs CSS-in-JS solution or classes
-        color: '#2563eb', // Blue color for today's number
-        fontWeight: 'bold',
+    background: '#eff6ff',
+    '& > div:first-child': {
+      color: '#2563eb',
+      fontWeight: 'bold',
     }
   },
   taskIndicators: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.2rem', // Tighter gap for task bars
+    gap: '0.2rem',
     marginTop: '0.25rem'
   },
   taskBar: {
-    height: '0.625rem', // 10px height
-    borderRadius: '0', // Default square ends
+    height: '0.625rem',
+    borderRadius: '0',
     position: 'relative',
     zIndex: '1',
-    overflow: 'hidden', // To ensure text doesn't overflow if added later
-    // Add a very subtle border to distinguish stacked bars if they are same color
-    // border: '1px solid rgba(0,0,0,0.05)' 
+    overflow: 'hidden',
+
+
   },
   taskBarRounded: {
-    borderRadius: '0.25rem' // 4px radius for single-day tasks
+    borderRadius: '0.25rem'
   },
   taskBarRoundedLeft: {
     borderTopLeftRadius: '0.25rem',
@@ -554,12 +529,12 @@ const styles = {
   },
   moreIndicator: {
     fontSize: '0.75rem',
-    color: '#6b7280', // Gray for "more" indicator
+    color: '#6b7280',
     marginTop: '0.25rem',
     textAlign: 'right',
     paddingRight: '0.25rem'
   },
-  loadingOverlay: { // Style for a full component loading state
+  loadingOverlay: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -568,9 +543,9 @@ const styles = {
     fontWeight: '500',
     textAlign: 'center',
     padding: '2rem'
-    // position: 'absolute', // If you want it to overlay existing content
-    // top: 0, left: 0, right: 0, bottom: 0,
-    // background: 'rgba(255, 255, 255, 0.8)',
-    // zIndex: 10
+
+
+
+
   }
 };

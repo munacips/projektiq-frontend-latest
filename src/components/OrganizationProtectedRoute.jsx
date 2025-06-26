@@ -5,17 +5,17 @@ const OrganizationProtectedRoute = ({ children, allowedRoles }) => {
   const userId = localStorage.getItem("userId");
   const location = useLocation();
   const organization = location.state?.organization;
-  console.log("OrganizationProtectedRoute Project", organization);
+  console.log("OrganizationProtectedRoute Organization", organization);
 
   if (!userId) {
-    // Redirect to login if not authenticated
+    
     return <Navigate to="/login" />;
   } else if (!organization) {
-    // Handle case when organization data is missing
+    
     console.error("Organization data is missing in location state");
     return <Navigate to="/" />;
   } else {
-    const user = organization.members.find((entry) => entry.account_id == userId);
+    const user = organization.members.find((entry) => entry.account == userId);
     console.log("OrganizationProtectedRoute user", user);
     const role = user ? user.role : null;
     if (!allowedRoles.includes(role)) {

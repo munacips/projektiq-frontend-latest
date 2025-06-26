@@ -16,6 +16,7 @@ function Chat() {
   const [newChatSubject, setNewChatSubject] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedUsers, setSelectedUsers] = useState([]);
 
   const navigate = useNavigate();
   const clientId = process.env.REACT_APP_CLIENT_ID;
@@ -143,6 +144,39 @@ function Chat() {
 
       // Set the newly created chat as the active chat
       setChat(response);
+
+      // The WebSocket will handle updating the chat list
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      setErrorMessage("Failed to create new conversation.");
+    }
+  }, [selectedUser, newChatSubject, userId, apiRequest]);
+
+  // Function to create a new conversation
+  const createNewGroupConversation = useCallback(async () => {
+    if (!selectedUsers || !newChatSubject) return;
+
+    try {
+      const response = await apiRequest(
+        'post',
+        "http://localhost:8000/create_conversation/",
+        {
+          subject: newChatSubject,
+          participants: [...selectedUsers.map(u => u.id), userId],
+          is_group: true
+        }
+      );
+
+      // Reset form and close modal
+      setNewChatSubject("");
+      setSelectedUser(null);
+      setSearchQuery("");
+      setSearchResults([]);
+      setShowGroupChatModal(false);
+
+      // Set the newly created chat as the active chat
+      setChat(response);
+
 
       // The WebSocket will handle updating the chat list
     } catch (error) {
@@ -457,7 +491,11 @@ function Chat() {
                 }}
               >
                 <div style={styles.chatItemContent}>
-                  <h3 style={styles.chatItemTitle}>{chatItem.subject}</h3>
+                  <h3 style={styles.chatItemTitle}>
+                    {chatItem.is_group 
+                      ? chatItem.subject 
+                      : chatItem.participants_usernames?.filter(participantUsername => participantUsername !== username)[0] || chatItem.subject}
+                  </h3>
                   <span style={styles.chatItemDate}>
                     {new Date(chatItem.date_updated).toLocaleDateString()}
                   </span>
@@ -493,7 +531,13 @@ function Chat() {
         {Object.keys(chat).length > 0 ? (
           <>
             <div style={styles.chatHeader}>
-              <h2 style={styles.chatTitle}>{chat.subject}</h2>
+              <h2 style={styles.chatTitle}>
+                {chat.is_group
+                  ? chat.subject
+                  : chat.participants_usernames?.filter(participantUsername => participantUsername !== username)[0] || chat.subject}
+              </h2>
+
+
               <div style={styles.chatParticipants}>
                 {chat.participants && chat.participants.map(participant => (
                   <span key={participant.id} style={styles.participantBadge}>
@@ -685,7 +729,7 @@ function Chat() {
         </div>
       )}
 
-      {/* Group Chat Modal - Placeholder for future implementation */}
+      {/* Group Chat Modal */}
       {showGroupChatModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
@@ -693,20 +737,126 @@ function Chat() {
               <h3 style={styles.modalTitle}>New Group Chat</h3>
               <button
                 style={styles.closeButton}
-                onClick={() => setShowGroupChatModal(false)}
+                onClick={() => {
+                  setShowGroupChatModal(false);
+                  setSearchQuery("");
+                  setSearchResults([]);
+                  setSelectedUsers([]);
+                  setNewChatSubject("");
+                }}
               >
                 ×
               </button>
             </div>
             <div style={styles.modalBody}>
-              <p>Group chat functionality will be implemented soon.</p>
+              <input
+                type="text"
+                placeholder="Search for users..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (e.target.value.length >= 3) {
+                    searchUsers(e.target.value);
+                  } else {
+                    setSearchResults([]);
+                  }
+                }}
+                style={styles.searchInput}
+              />
+
+              <div style={styles.searchResults}>
+                {searchResults.length === 0 && searchQuery.length >= 3 ? (
+                  <div style={styles.noResults}>No users found</div>
+                ) : (
+                  searchResults.map(user => (
+                    <div
+                      key={user.id}
+                      style={{
+                        ...styles.searchResultItem,
+                        backgroundColor: selectedUsers.some(u => u.id === user.id) ? '#edf2f7' : 'transparent'
+                      }}
+                      onClick={() => {
+                        setSelectedUsers(prevUsers => {
+                          // If user is already selected, remove them
+                          if (prevUsers.some(u => u.id === user.id)) {
+                            return prevUsers.filter(u => u.id !== user.id);
+                          }
+                          // Otherwise add them to selection
+                          return [...prevUsers, user];
+                        });
+                      }}
+                    >
+                      <div style={styles.searchResultItemContent}>
+                        <span>{user.username}</span>
+                        {selectedUsers.some(u => u.id === user.id) && (
+                          <i className="fas fa-check" style={styles.selectedUserCheck}></i>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {selectedUsers.length > 0 && (
+                <>
+                  <div style={styles.selectedUsersContainer}>
+                    <label style={styles.inputLabel}>Selected Users ({selectedUsers.length})</label>
+                    <div style={styles.selectedUsersList}>
+                      {selectedUsers.map(user => (
+                        <div key={user.id} style={styles.selectedUserBadge}>
+                          {user.username}
+                          <button
+                            style={styles.removeUserButton}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedUsers(prevUsers =>
+                                prevUsers.filter(u => u.id !== user.id)
+                              );
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={styles.newChatForm}>
+                    <label style={styles.inputLabel}>Group Chat Subject</label>
+                    <input
+                      type="text"
+                      placeholder="Enter a subject for your group chat"
+                      value={newChatSubject}
+                      onChange={(e) => setNewChatSubject(e.target.value)}
+                      style={styles.subjectInput}
+                    />
+                  </div>
+                </>
+              )}
             </div>
             <div style={styles.modalFooter}>
               <button
                 style={styles.cancelButton}
-                onClick={() => setShowGroupChatModal(false)}
+                onClick={() => {
+                  setShowGroupChatModal(false);
+                  setSearchQuery("");
+                  setSearchResults([]);
+                  setSelectedUsers([]);
+                  setNewChatSubject("");
+                }}
               >
-                Close
+                Cancel
+              </button>
+              <button
+                style={{
+                  ...styles.createButton,
+                  opacity: selectedUsers.length > 0 && newChatSubject ? 1 : 0.5,
+                  cursor: selectedUsers.length > 0 && newChatSubject ? 'pointer' : 'not-allowed'
+                }}
+                disabled={selectedUsers.length === 0 || !newChatSubject}
+                onClick={createNewGroupConversation}
+              >
+                Create Group
               </button>
             </div>
           </div>

@@ -68,20 +68,16 @@ function Login() {
             }
         } catch (error) {
             if (error.response) {
-                // Server responded with an error status
                 if (error.response.status === 401 || error.response.status === 400) {
                     setErrorMessage('Invalid username or password');
                 } else if (error.response.data && error.response.data.detail) {
-                    // Use the error message from the server if available
                     setErrorMessage(error.response.data.detail);
                 } else {
                     setErrorMessage(`Server error: ${error.response.status}`);
                 }
             } else if (error.request) {
-                // Request was made but no response received
                 setErrorMessage('No response from server. Please check your connection.');
             } else {
-                // Something else caused the error
                 setErrorMessage(`Error: ${error.message}`);
             }
             setIsLoading(false);
@@ -130,6 +126,10 @@ function Login() {
                         )}
                     </button>
                 </form>
+
+                <div style={styles.signupLink}>
+                    <p>Don't have an account? <span style={styles.link} onClick={() => navigate('/signup')}>Sign up</span></p>
+                </div>
             </div>
         </div>
     );
@@ -215,6 +215,15 @@ const styles = {
         borderTopColor: 'white',
         animation: 'spin 1s ease-in-out infinite',
         display: 'inline-block',
+    },
+    signupLink: {
+        marginTop: '20px',
+        textAlign: 'center',
+    },
+    link: {
+        color: '#007bff',
+        cursor: 'pointer',
+        textDecoration: 'underline',
     },
     '@keyframes spin': {
         to: { transform: 'rotate(360deg)' }

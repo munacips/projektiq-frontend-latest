@@ -1,20 +1,43 @@
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
 function Task() {
     const location = useLocation();
-    const { task } = location.state || {};
+    const { task: initialTask } = location.state || {};
+    const [task, setTask] = useState(initialTask || {});
     const [loading, setLoading] = useState(false);
     const [comment, setComment] = useState('');
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    // useEffect(() => {
-    //     if (!task) {
-    //         const taskData = await axios.get(`http://localhost:8000/get_task/${location.state.taskId}/`);
-    //         console.error("No task data available");
-    //     }
-    // }, [task]);
+    // Get task ID either from location state or URL params
+    const taskId = task?.id || (location.state && location.state.taskId);
+
+    // Fetch task data
+    useEffect(() => {
+        const fetchTaskData = async () => {
+            if (!taskId) return;
+
+            try {
+                const accessToken = localStorage.getItem('accessToken');
+                const response = await axios.get(`http://localhost:8000/get_task/${taskId}/`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 200) {
+                    setTask(response.data);
+                }
+            } catch (error) {
+                console.error("Error fetching task data:", error);
+            }
+        };
+
+        fetchTaskData();
+    }, [taskId, refreshTrigger]); // Re-fetch when taskId changes or refreshTrigger is updated
 
     const handleComment = async (e) => {
         e.preventDefault();
@@ -24,7 +47,7 @@ function Task() {
             const csrfToken = Cookies.get('csrftoken');
             await axios.post(`http://localhost:8000/task_comment/`,
                 {
-                    //task: id,
+                    task: task.id, // Make sure to include the task ID
                     comment: comment
                 },
                 {
@@ -36,6 +59,8 @@ function Task() {
                 }
             );
             setComment('');
+            // Refresh task data to show the new comment
+            setRefreshTrigger(prev => prev + 1);
         } catch (error) {
             console.error("Error posting comment:", error);
         } finally {
@@ -43,7 +68,30 @@ function Task() {
         }
     };
 
-    const markAsDone = async () => { };
+    const markAsDone = async () => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            const csrfToken = Cookies.get('csrftoken');
+
+            const response = await axios.patch(`http://localhost:8000/get_task/${task.id}/`, {
+                "implemented": true
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+
+            if (response.status === 200) {
+                console.log("Task marked as done");
+                // Increment the refreshTrigger to cause the useEffect to run again
+                setRefreshTrigger(prev => prev + 1);
+            }
+        } catch (error) {
+            console.error("Error marking task as done:", error);
+        }
+    };
 
     return (
         <div style={styles.container}>
@@ -92,9 +140,20 @@ function Task() {
                                     </span>
                                 </div>
                             )}
+                            {task?.implemented && (
+                                <div style={styles.infoItem}>
+                                    <span style={styles.label}>Updated:</span>
+                                    <span style={{
+                                        ...styles.value,
+                                        color: new Date() > new Date(task.date_updated) ? '#e53e3e' : '#38a169'
+                                    }}>
+                                        {new Date(task.date_updated).toLocaleDateString()}
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
-                        <div style={styles.commentsSection}>
+                        {/* <div style={styles.commentsSection}>
                             <h4 style={styles.commentsTitle}>Comments</h4>
 
                             <form onSubmit={handleComment} style={styles.commentForm}>
@@ -127,7 +186,7 @@ function Task() {
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

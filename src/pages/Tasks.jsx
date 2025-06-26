@@ -13,8 +13,8 @@ function Tasks() {
         try {
             const accessToken = localStorage.getItem('accessToken')
             const csrfToken = Cookies.get('csrftoken')
-            const response = await axios.put(`http://localhost:8000/my_tasks/`, 
-                { id }, 
+            const response = await axios.put(`http://localhost:8000/my_tasks/`,
+                { id },
                 {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
@@ -23,7 +23,7 @@ function Tasks() {
                     }
                 }
             )
-            
+
             if (response.status === 200) {
                 setKey(prevKey => prevKey + 1)
             }
@@ -88,7 +88,7 @@ function Tasks() {
             }
         }
         fetchTasks()
-    }, [navigate,key])
+    }, [navigate, key])
 
     if (loading) {
         return (
@@ -111,11 +111,11 @@ function Tasks() {
                         {tasks?.filter(task => !task.implemented)
                             .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
                             .map(task => (
-                                <div key={task.id} style={styles.taskCard} onClick={()=>{navigate("/task",{state:{task}})}} >
+                                <div key={task.id} style={styles.taskCard} onClick={() => { navigate("/task", { state: { task } }) }} >
                                     <div style={styles.taskHeader}>
                                         <h3 style={styles.taskTitle}>{task.task}</h3>
                                         <span style={styles.assignedBy}>
-                                            Assigned by: {task.assigned_by}
+                                            Assigned by: {task.assigned_by_name}
                                         </span>
                                     </div>
                                     <p style={styles.description}>{task.description}</p>
@@ -135,7 +135,7 @@ function Tasks() {
                                                 {new Date(task.due_date).toLocaleDateString()}
                                             </span>
                                         </div>
-                                        <button 
+                                        <button
                                             style={styles.completeButton}
                                             onClick={() => markAsDone(task.id)}
                                         >
@@ -143,7 +143,7 @@ function Tasks() {
                                         </button>
                                     </div>
                                 </div>
-                        ))}
+                            ))}
                     </div>
                 </div>
 
@@ -153,7 +153,7 @@ function Tasks() {
                         {tasks?.filter(task => task.implemented)
                             .sort((a, b) => new Date(b.date_updated) - new Date(a.date_updated))
                             .map(task => (
-                                <div key={task.id} style={{...styles.taskCard, opacity: 0.8}}>
+                                <div key={task.id} style={{ ...styles.taskCard, opacity: 0.8 }}>
                                     <div style={styles.taskHeader}>
                                         <h3 style={styles.taskTitle}>{task.task}</h3>
                                         <span style={styles.completedBadge}>Completed</span>
@@ -168,7 +168,7 @@ function Tasks() {
                                         </div>
                                     </div>
                                 </div>
-                        ))}
+                            ))}
                     </div>
                 </div>
             </div>

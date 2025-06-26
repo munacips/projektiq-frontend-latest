@@ -6,12 +6,13 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import EditIcon from "@mui/icons-material/Edit";
 import { People } from "@mui/icons-material";
 import { useOrganization } from '../components/OrganizationContext';
+import axios from 'axios'
+import Cookies from 'js-cookie'
 
 function Organization() {
     const navigate = useNavigate();
     const { organization, setOrganization } = useOrganization();
     const location = useLocation();
-    //const { organization } = location.state || {};
     const [upcomingProjects, setUpcomingProjects] = useState([]);
     const [pastProjects, setPastProjects] = useState([]);
     const [pendingIssues, setPendingIssues] = useState([]);
@@ -19,12 +20,10 @@ function Organization() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // If organization is passed via location state, update context
         if (location.state?.organization) {
             setOrganization(location.state.organization);
         }
 
-        // Your existing logic for processing projects, issues, etc.
         if (organization) {
             const today = new Date();
             const upcoming = [];
@@ -104,7 +103,7 @@ function Organization() {
                                             <Button
                                                 variant="contained"
                                                 startIcon={<People />}
-                                                onClick={() => {navigate('/manage_members', { state: { organization } })}}
+                                                onClick={() => { navigate('/manage_members', { state: { organization } }) }}
                                                 style={styles.actionButton}
                                             >
                                                 Manage Members
@@ -117,7 +116,7 @@ function Organization() {
                                     <Button
                                         variant="contained"
                                         startIcon={<AddIcon />}
-                                        onClick={()=>{navigate('/new_project', { state: { organization } })}}
+                                        onClick={() => { navigate('/new_project', { state: { organization } }) }}
                                         style={styles.actionButton}
                                     >
                                         New Project
@@ -129,12 +128,12 @@ function Organization() {
                         <div style={styles.statsContainer}>
                             <div style={styles.statCard}>
                                 <span style={styles.statIcon}>📊</span>
-                                <span style={styles.statNumber}>{organization.active_projects}</span>
-                                <span style={styles.statLabel}>Active Projects</span>
+                                <span style={styles.statNumber}>{organization.projects.length}</span>
+                                <span style={styles.statLabel}>Projects</span>
                             </div>
                             <div style={styles.statCard}>
                                 <span style={styles.statIcon}>👥</span>
-                                <span style={styles.statNumber}>{organization.total_members}</span>
+                                <span style={styles.statNumber}>{organization.members.length}</span>
                                 <span style={styles.statLabel}>Team Members</span>
                             </div>
                             <div style={styles.statCard}>

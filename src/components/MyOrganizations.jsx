@@ -27,7 +27,7 @@ function MyOrganizations() {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken // Include CSRF token in headers
+                        'X-CSRFToken': csrfToken 
                     }
                 });
                 console.log("Organizations : ")
@@ -36,8 +36,8 @@ function MyOrganizations() {
             } catch (error) {
                 console.error('Error fetching organizations:', error);
                 if (error.response && error.response.status === 401) {
-                    const refreshToken = localStorage.getItem('refreshToken'); // Ensure this is defined again
-                    const csrfToken = Cookies.get('csrftoken'); // Ensure this is defined again
+                    const refreshToken = localStorage.getItem('refreshToken'); 
+                    const csrfToken = Cookies.get('csrftoken'); 
                     if (refreshToken) {
                         try {
                             const refreshResponse = await axios.post(
@@ -45,13 +45,13 @@ function MyOrganizations() {
                                 new URLSearchParams({
                                     grant_type: 'refresh_token',
                                     refresh_token: refreshToken,
-                                    client_id: clientId, // Replace with your actual client ID
-                                    client_secret: clientSecret, // Replace with your actual client secret
+                                    client_id: clientId, 
+                                    client_secret: clientSecret, 
                                 }),
                                 {
                                     headers: {
                                         'Content-Type': 'application/x-www-form-urlencoded',
-                                        'X-CSRFToken': csrfToken, // Optional, only include if needed
+                                        'X-CSRFToken': csrfToken, 
                                     },
                                 }
                             );
@@ -59,7 +59,7 @@ function MyOrganizations() {
                             const newAccessToken = refreshResponse.data.access_token;
                             localStorage.setItem('accessToken', newAccessToken);
 
-                            // Retry fetching projects with the new token
+                            
                             fetchOrganizations();
                         } catch (refreshError) {
                             console.error('Error refreshing token:', refreshError);

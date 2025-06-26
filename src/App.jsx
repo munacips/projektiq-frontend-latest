@@ -32,6 +32,9 @@ import ManageMember from './pages/ManageMember';
 import ProjectProtectedRoute from './components/ProjectProtectedRoute';
 import AccessDenied from './pages/AccessDenied';
 import OrganizationProtectedRoute from './components/OrganizationProtectedRoute';
+import NewOrganization from './pages/NewOrganization';
+import Signup from './pages/Signup';
+import Logout from './pages/Logout';
 
 function App() {
   return (
@@ -49,6 +52,8 @@ function App() {
                   </ProjectProtectedRoute>
                 }></Route>
                 <Route exact path='/login' element={<Login />}></Route>
+                <Route exact path="logout" element={<Logout />} />
+                <Route exact path="/signup" element ={<Signup />} />
                 <Route exact path="/project/:id" element={<Project />} />
                 <Route exact path="/issue/:id" element={<IssuePage />} />
                 <Route exact path='/change_request/:id' element={<ChangeRequest />} />
@@ -59,9 +64,8 @@ function App() {
                 <Route exact path="/tasks" element={<Tasks />} />
                 <Route exact path="/chat" element={<Chat />} />
                 <Route exact path="/new_project" element={
-                  <OrganizationProtectedRoute allowedRoles={['Admin', 'General Manager']}>
+                  
                     <NewProject />
-                  </OrganizationProtectedRoute>
                 } />
                 <Route exact path="/task" element={<Task />} />
                 <Route exact path="/new_issue" element={<NewIssue />} />
@@ -93,6 +97,7 @@ function App() {
                   </ProjectProtectedRoute>
                 } />
                 <Route exact path="/unauthorized" element={<AccessDenied />} />
+                <Route exact path="/create_organization" element={<NewOrganization />} />
               </Routes>
             </div>
           </div>

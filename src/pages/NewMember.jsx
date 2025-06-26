@@ -23,12 +23,30 @@ function NewMember() {
     const accessToken = localStorage.getItem('accessToken');
     const csrfToken = Cookies.get('csrftoken');
     const { organization, setOrganization } = useOrganization();
-    
+
     const [selectedUser, setSelectedUser] = useState(null);
     const [role, setRole] = useState('');
     const [userSuggestions, setUserSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    const fetchOrganization = async (orgId) => {
+        const accessToken = localStorage.getItem('accessToken')
+        const csrfToken = Cookies.get('csrftoken')
+        const response = await axios.get(`http://localhost:8000/organizations/${orgId}`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+
+        if (response.status == 200) {
+            setOrganization(response.data)
+        } else {
+            console.error(response.data)
+        }
+    }
 
     const roles = [
         { value: 'General Manager', label: 'General Manager' },
@@ -53,7 +71,7 @@ function NewMember() {
 
         setLoading(true);
         try {
-        
+
             const response = await axios.get(`http://localhost:8000/search_users/?query=${query}`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -85,16 +103,21 @@ function NewMember() {
                 org_id: organization.id,
                 user_id: selectedUser.id,
                 role: role
-            },{headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            }});
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                }
+            });
 
             if (response.status === 201) {
-                navigate(`/organization`, {
-                    state: { organization }
-                });
+                fetchOrganization(organization.id)
+                navigate(`/organization`)
+                // , {
+                //     state: { organization }
+                // }
+
             }
         } catch (error) {
             setError(error.response?.data?.detail || 'Failed to add member. Please try again.');
@@ -127,7 +150,7 @@ function NewMember() {
                         onInputChange={(_, newInputValue) => {
                             handleUserSearch(newInputValue);
                         }}
-                        isOptionEqualToValue={(option, value) => 
+                        isOptionEqualToValue={(option, value) =>
                             option?.id === value?.id
                         }
                         renderInput={(params) => (

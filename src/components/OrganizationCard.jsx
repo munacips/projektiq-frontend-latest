@@ -11,11 +11,11 @@ function OrganizationCard({organization}) {
                 <div style={styles.stats}>
                     <div style={styles.statItem}>
                         <span style={styles.statLabel}>Active Projects</span>
-                        <span style={styles.statValue}>{organization.active_projects}</span>
+                        <span style={styles.statValue}>{organization.projects.length}</span>
                     </div>
                     <div style={styles.statItem}>
                         <span style={styles.statLabel}>Members</span>
-                        <span style={styles.statValue}>{organization.total_members}</span>
+                        <span style={styles.statValue}>{organization.members.length}</span>
                     </div>
                 </div>
             </div>

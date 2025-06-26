@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import Cookies from 'js-cookie'
 import { useNavigate } from 'react-router-dom'
-import ProjectGantt from '../components/ProjectGantt' // Assuming this is the correct path
+import ProjectGantt from '../components/ProjectGantt'
 
 function Project() {
     const { id } = useParams()
@@ -14,15 +14,15 @@ function Project() {
     const [newComment, setNewComment] = useState('')
     const [shouldFetchComments, setShouldFetchComments] = useState(false)
     const [showPhaseForm, setShowPhaseForm] = useState(false);
-    const [ganttRefreshTrigger, setGanttRefreshTrigger] = useState(0); // 1. New state for Gantt refresh
+    const [ganttRefreshTrigger, setGanttRefreshTrigger] = useState(0);
 
-    const handleAddPhase = async (e) => { // Changed to async directly
+    const handleAddPhase = async (e) => { 
         e.preventDefault();
         const phase = e.target.elements.phase.value;
         const endDate = e.target.elements.endDate.value;
         const date_created = e.target.elements.date_created.value;
 
-        if (!phase || !endDate || !date_created) { // Added date_created to validation
+        if (!phase || !endDate || !date_created) {
             alert('Please fill in all fields');
             return;
         }
@@ -36,7 +36,7 @@ function Project() {
                 status: phase,
                 date_created: date_created,
                 date_ended: endDate,
-                description: phase // Or a more detailed description if you have one
+                description: phase
             }, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,

@@ -9,15 +9,15 @@ function ProjectCard({ project }) {
 
     const getStatusColor = (status) => {
         const statusColors = {
-            'Requirements': '#3498db',  // Blue
-            'Design': '#9b59b6',        // Purple
-            'Development': '#f1c40f',   // Yellow
-            'Testing': '#e67e22',       // Orange
-            'Deployment': '#2ecc71',    // Green
-            'Maintenance': '#1abc9c',   // Turquoise
-            'Closed': '#95a5a6',        // Gray
-            'Cancelled': '#e74c3c',     // Red
-            'Other': '#34495e'          // Dark Blue
+            'Requirements': '#3498db',  
+            'Design': '#9b59b6',        
+            'Development': '#f1c40f',   
+            'Testing': '#e67e22',       
+            'Deployment': '#2ecc71',    
+            'Maintenance': '#1abc9c',   
+            'Closed': '#95a5a6',        
+            'Cancelled': '#e74c3c',     
+            'Other': '#34495e'          
         }
         return statusColors[status] || '#34495e'
     }

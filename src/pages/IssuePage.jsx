@@ -50,6 +50,41 @@ function IssuePage() {
         }
     };
 
+    // Mark issue as closed
+    const markAsClosed = async () => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            const csrfToken = Cookies.get('csrftoken');
+            
+            if (!accessToken) {
+                console.error('No access token found');
+                navigate('/login');
+                return;
+            }
+            
+            const response = await axios.put(`http://localhost:8000/my_issues/`,
+                {
+                    id: issue.id
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                }
+            );
+
+            if (response.status === 200) {
+                window.alert("Issue marked as closed!");
+                // Update the local state to reflect the change
+                setIssue({...issue, closed: true});
+            }
+        } catch (error) {
+            console.error("Error updating issue: ", error);
+        }
+    };
+
     // Fetch initial issue data
 useEffect(() => {
     const fetchIssue = async () => {
@@ -127,7 +162,10 @@ useEffect(() => {
                                 <div style={styles.headerContent}>
                                     <h1 style={styles.title}>{issue.issue}</h1>
                                     {!issue.closed && (
-                                        <button style={styles.markCompletedButton}>
+                                        <button 
+                                            style={styles.markCompletedButton}
+                                            onClick={markAsClosed}
+                                        >
                                             Mark as Closed
                                         </button>
                                     )}
@@ -161,7 +199,7 @@ useEffect(() => {
                                 <form onSubmit={handleCommentSubmit} style={styles.commentForm}>
                                     <textarea
                                         value={newComment}
-                                        onChange={(e) => setNewComment(e.target.value)}
+                                        onChange={handleCommentChange}
                                         style={styles.commentInput}
                                         placeholder="Add a comment..."
                                         rows="3"

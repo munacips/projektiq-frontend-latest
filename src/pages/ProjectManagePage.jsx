@@ -1,15 +1,100 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import MemberCard from '../components/MemberCard';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import {
+  TextField,
+  Autocomplete,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Paper,
+  Typography,
+  Alert
+} from "@mui/material";
 
 function ProjectManagePage() {
   const navigate = useNavigate()
   const location = useLocation()
   const project = location.state?.project || {}
+  const [showOrgModal, setShowOrgModal] = useState(false);
+  const [selectedOrg, setSelectedOrg] = useState(null);
+  const [orgSuggestions, setOrgSuggestions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [orgCode, setOrgCode] = useState('');
+  const [orgName, setOrgName] = useState('');
+  const accessToken = localStorage.getItem('accessToken');
+  const csrfToken = Cookies.get('csrftoken');
+
   console.log("Loading Project data")
   console.log(`Project Data : ${project}`)
 
-  
+
+  const handleOrgSearch = async (code) => {
+    if (code.length !== 8) {
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:8000/search_organizations/?query=${code}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        }
+      });
+      
+      if (response.data && response.data.id) {
+        setSelectedOrg(response.data);
+        setOrgName(response.data.name);
+      } else {
+        setSelectedOrg(null);
+        setOrgName('');
+        setError('No organization found with this code');
+      }
+    } catch (error) {
+      console.error('Error fetching organization:', error);
+      setSelectedOrg(null);
+      setOrgName('');
+      setError('Error searching for organization');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!selectedOrg ) return;
+
+    try {
+      const response = await axios.post(`http://localhost:8000/invite_organization_to_project/`, {
+        project_id: project.id,
+        organization_id: selectedOrg.id,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        }
+      });
+
+      if (response.status === 201) {
+        setShowOrgModal(false);
+        // Refresh project data
+
+        alert('Organization invited successfully');
+      }
+    } catch (error) {
+      setError(error.response?.data?.detail || 'Failed to invite organization. Please try again.');
+    }
+  };
   
   return (
     <div style={styles.container}>
@@ -20,8 +105,79 @@ function ProjectManagePage() {
           <button style={styles.addButton} onClick={()=>{navigate('/new_project_member',{state : {project}})}}>Add Team Member</button>
           <button style={styles.addButton} onClick={()=>{navigate('/new_issue',{state : {project}})}} >Create Issue</button>
           <button style={styles.addButton} onClick={()=>{navigate('/new_task',{state : {project}})}} >Create Task</button>
+          <button style={styles.addButton} onClick={()=> setShowOrgModal(true)} >Invite Organisation</button>
+
           {/* <button style={styles.addButton}>Add Comment</button> */}
         </div>
+      </div>
+
+      <div style={{
+        ...styles.orgModal,
+        display: showOrgModal ? 'flex' : 'none'
+      }}>
+        <div style={styles.modalOverlay} onClick={() => setShowOrgModal(false)}></div>
+        <Paper style={styles.formContainer}>
+          <Typography variant="h4" style={styles.modalTitle}>
+            Invite Organization
+          </Typography>
+          <Typography variant="subtitle1" style={styles.modalSubtitle}>
+            {project?.name}
+          </Typography>
+
+          {error && (
+            <Alert severity="error" style={styles.errorAlert}>
+              {error}
+            </Alert>
+          )}
+
+          <form onSubmit={handleSubmit} style={styles.form}>
+            <TextField
+              fullWidth
+              label="Organization Code"
+              variant="outlined"
+              value={orgCode || ''}
+              onChange={(e) => {
+                const code = e.target.value;
+                setOrgCode(code);
+                if (code.length === 8) {
+                  handleOrgSearch(code);
+                } else {
+                  setSelectedOrg(null);
+                  setOrgName('');
+                }
+              }}
+              required
+              style={styles.formField}
+            />
+            
+            <TextField
+              fullWidth
+              label="Organization Name"
+              variant="outlined"
+              value={orgName || ''}
+              disabled
+              style={styles.formField}
+            />
+
+            <div style={styles.buttonContainer}>
+              <Button
+                variant="outlined"
+                onClick={() => setShowOrgModal(false)}
+                style={styles.cancelButton}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                style={styles.submitButton}
+                disabled={!selectedOrg }
+              >
+                Invite Organization
+              </Button>
+            </div>
+          </form>
+        </Paper>
       </div>
 
       <div style={styles.content}>
@@ -156,6 +312,69 @@ const getStatusColor = (status) => {
 };
 
 const styles = {
+  orgModal: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  formContainer: {
+    padding: '32px',
+    maxWidth: '500px',
+    width: '100%',
+    borderRadius: '12px',
+    zIndex: 1001,
+    position: 'relative',
+  },
+  modalTitle: {
+    color: '#1F2937',
+    marginBottom: '8px',
+    fontWeight: 600
+  },
+  modalSubtitle: {
+    color: '#6B7280',
+    marginBottom: '24px'
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px'
+  },
+  formField: {
+    marginBottom: '16px'
+  },
+  buttonContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginTop: '16px',
+  },
+  submitButton: {
+    backgroundColor: '#4299e1',
+    padding: '12px 24px',
+    '&:hover': {
+      backgroundColor: '#3182ce'
+    }
+  },
+  cancelButton: {
+    padding: '12px 24px',
+  },
+  errorAlert: {
+    marginBottom: '20px',
+    width: '100%'
+  },
   container: {
     padding: '32px',
     maxWidth: '1400px',
@@ -330,4 +549,3 @@ const styles = {
 }
 
 export default ProjectManagePage
-
