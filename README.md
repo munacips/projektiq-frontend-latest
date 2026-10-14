@@ -1,70 +1,135 @@
-# Getting Started with Create React App
+# ProjektIQ Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**ProjektIQ** is a React-based project lifecycle management application that helps teams organise projects, manage requirements and tasks, track issues and change requests, coordinate team members, record work hours, and communicate through integrated chat.
 
-## Available Scripts
+## Table of Contents
 
-In the project directory, you can run:
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Architecture and Patterns](#architecture-and-patterns)
+- [Data Models](#data-models)
+- [Services and API Layer](#services-and-api-layer)
+- [Navigation and Routing](#navigation-and-routing)
+- [Administration and Membership](#administration-and-membership)
+- [Configuration](#configuration)
+- [Getting Started](#getting-started)
+- [Backend Requirements](#backend-requirements)
+- [Testing](#testing)
+- [Build and Deployment](#build-and-deployment)
+- [Security Considerations](#security-considerations)
+- [Developer Notes](#developer-notes)
 
-### `npm start`
+## Overview
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+ProjektIQ provides a central workspace for managing the project lifecycle, from project creation and requirement management to task execution, issue tracking, change requests, scheduling, and maintenance-related activities.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The frontend is built with React and communicates with a separate backend through HTTP APIs. It also supports WebSocket-based communication for chat functionality.
 
-### `npm test`
+The application includes organization and project membership management, role-aware navigation, project activity logs, time tracking, and team communication features.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+**Repository:** [munacips/projektiq-frontend-latest](https://github.com/munacips/projektiq-frontend-latest)
 
-### `npm run build`
+## Features
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 1. Authentication and Account Management
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- User registration and login.
+- OAuth-based access-token acquisition.
+- Access-token and refresh-token storage.
+- Token refresh handling in selected API request flows.
+- Logout and session cleanup.
+- Account information and user search.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 2. Organization Management
 
-### `npm run eject`
+- Create and view organizations.
+- Manage organization membership.
+- Add members to organizations.
+- Assign and manage member roles.
+- View organization-related information.
+- Apply role-based restrictions to selected management screens.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 3. Project Management
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- View projects associated with the current user.
+- Create projects with descriptive information and dates.
+- View individual project details.
+- Manage project-related information.
+- Associate organizations and members with projects.
+- Review project activity logs.
+- Restrict selected project management operations to authorized roles.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 4. Requirements and Task Management
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- Create and view project requirements.
+- Browse tasks and inspect individual task details.
+- Create tasks and associate work with relevant project members.
+- Support task-related project workflows.
+- Provide screens for organising and tracking project work.
 
-## Learn More
+### 5. Issue and Change Request Management
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Browse reported issues.
+- View individual issue details.
+- Create issues.
+- View and create change requests.
+- Support project maintenance and change-management workflows.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 6. Scheduling and Time Tracking
 
-### Code Splitting
+- View scheduling and calendar interfaces.
+- Work with date-based project information.
+- View and manage time-log records.
+- Use timeline and Gantt-related UI dependencies for scheduling-oriented functionality.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### 7. Team Communication
 
-### Analyzing the Bundle Size
+- Access the chat interface.
+- Support direct and group conversations.
+- Search for users when initiating conversations.
+- Retrieve conversation information through HTTP APIs.
+- Exchange live chat updates through WebSockets.
+- Track message read state where supported by the API.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 8. Search and Navigation
 
-### Making a Progressive Web App
+- Search for users and other backend-provided results.
+- Navigate between projects, organizations, tasks, issues, requirements, and communication screens.
+- Access shared navigation components.
+- Apply route-level access checks to selected management pages.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+> Feature availability depends on the backend implementation, the data returned by the API, and the permissions assigned to the current user.
 
-### Advanced Configuration
+## Tech Stack
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+The following versions are based on the declared dependency ranges in `package.json`. They are not necessarily the exact versions installed on every developer's machine. Refer to `package-lock.json` for resolved versions.
 
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+| Concern | Package / Tool | Version |
+|---|---|---|
+| Frontend framework | React | `^18.3.1` |
+| DOM rendering | React DOM | `^18.3.1` |
+| Application tooling | Create React App / `react-scripts` | `^5.0.1` |
+| Client-side routing | React Router DOM | `^6.28.0` |
+| HTTP communication | Axios | `^1.7.7` |
+| UI component library | Material UI | `@mui/material ^5.16.14` |
+| UI icons | Material UI Icons | `@mui/icons-material ^5.16.14` |
+| Date and time pickers | MUI X Date Pickers | `^5.0.20` |
+| Calendar interface | React Big Calendar | `^1.16.3` |
+| Scheduling interface | DevExpress React Scheduler packages | `^4.0.9` |
+| Gantt chart | Frappe Gantt | `^1.0.3` |
+| React Gantt integration | React Frappe Gantt | `^0.2.3` |
+| Gantt task interface | Gantt Task React | `^0.3.9` |
+| Data visualisation | Recharts | `^2.15.0` |
+| Icon library | React Icons | `^5.3.0` |
+| Additional icons | Font Awesome Free | `^6.7.2` |
+| Date utilities | Moment.js | `^2.30.1` |
+| Cookie management | js-cookie | `^3.0.5` |
+| Component testing | React Testing Library | `^13.4.0` |
+| DOM testing matchers | Jest DOM | `^5.17.0` |
+| User interaction testing | Testing Library User Event | `^13.5.0` |
+| Performance metrics | web-vitals | `^2.1.4` |
+| CSS framework | Tailwind CSS | `^4.1.6` |
+| CSS processing | PostCSS | `^8.5.3` |
+| CSS
